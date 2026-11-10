@@ -1,103 +1,80 @@
 
-// ======================================
-// KLYQ GROCERY POS
-// REGISTRATION SYSTEM
-// ======================================
+const ADMIN_CODE = "KLYQ2026";
 
-// REGISTER ACCOUNT
-const registerForm = document.getElementById("registerForm");
+const roleSelect = document.getElementById("regRole");
+const adminCodeContainer = document.getElementById("adminCodeContainer");
+const adminCodeInput = document.getElementById("adminCode");
 
-if (registerForm) {
+// Show Admin Code field only when Admin is selected
+roleSelect.addEventListener("change", function () {
+    if (this.value === "Admin") {
+        adminCodeContainer.style.display = "block";
+        adminCodeInput.required = true;
+    } else {
+        adminCodeContainer.style.display = "none";
+        adminCodeInput.required = false;
+        adminCodeInput.value = "";
+    }
+});
 
-    registerForm.addEventListener("submit", function(e) {
+// REGISTER
+document.getElementById("registerForm").addEventListener("submit", function(e) {
+    e.preventDefault();
 
-        e.preventDefault();
+    let users = JSON.parse(localStorage.getItem("gps_users")) || [];
 
-        // GET EXISTING USERS
-        let users = [];
+    const name = document.getElementById("regName").value.trim();
+    const username = document.getElementById("regUser").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPass").value;
+    const confirmPassword = document.getElementById("regConfirmPass").value;
+    const role = roleSelect.value;
+    const enteredCode = adminCodeInput.value;
 
-        try {
-            users = JSON.parse(localStorage.getItem("gps_users")) || [];
-        } catch (error) {
-            users = [];
-        }
+    if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+    }
 
-        // GET INPUT VALUES
-        const name = document.getElementById("regName").value.trim();
-        const username = document.getElementById("regUser").value.trim();
-        const email = document.getElementById("regEmail").value.trim().toLowerCase();
-        const password = document.getElementById("regPass").value;
-        const confirmPassword = document.getElementById("regConfirmPass").value;
+    if (role === "Admin" && enteredCode !== ADMIN_CODE) {
+        alert("Invalid Admin Access Code!");
+        return;
+    }
 
-        // CHECK EMPTY FIELDS
-        if (!name || !username || !email || !password || !confirmPassword) {
-            alert("Please complete all fields!");
-            return;
-        }
+    if (!role) {
+        alert("Please select a role!");
+        return;
+    }
 
-        // CHECK PASSWORD LENGTH
-        if (password.length < 6) {
-            alert("Password must be at least 6 characters!");
-            return;
-        }
+    const duplicate = users.some(user =>
+        user.username.toLowerCase() === username.toLowerCase() ||
+        user.email.toLowerCase() === email.toLowerCase()
+    );
 
-        // CHECK PASSWORD CONFIRMATION
-        if (password !== confirmPassword) {
-            alert("Passwords do not match!");
-            return;
-        }
+    if (duplicate) {
+        alert("Username or email already exists!");
+        return;
+    }
 
-        // CHECK EXISTING USERNAME OR EMAIL
-        const existingUser = users.find(user =>
-            (user.username || "").toLowerCase() === username.toLowerCase() ||
-            (user.email || "").toLowerCase() === email
-        );
+    const newUser = {
+        id: Date.now(),
+        name: name,
+        username: username,
+        email: email,
+        password: password,
+        role: role
+    };
 
-        if (existingUser) {
-            alert("Username or email already exists!");
-            return;
-        }
+    users.push(newUser);
 
-        // AUTOMATIC ROLE ASSIGNMENT
-        const assignedRole = users.length === 0 ? "Admin" : "Cashier";
+    localStorage.setItem("gps_users", JSON.stringify(users));
 
-        // CREATE NEW ACCOUNT
-        const newUser = {
-            id: Date.now(),
-            name: name,
-            username: username,
-            email: email,
-            password: password,
-            role: assignedRole
-        };
+    alert("Account successfully created!");
 
-        // SAVE ACCOUNT
-        users.push(newUser);
+    window.location.href = "login.html";
+});
 
-        localStorage.setItem("gps_users", JSON.stringify(users));
-
-        // SUCCESS MESSAGE
-        alert(
-            "Registration successful!\n" +
-            "Welcome, " + name + "!\n" +
-            "Assigned Role: " + assignedRole
-        );
-
-        // RESET FORM
-        registerForm.reset();
-
-        // REDIRECT TO LOGIN
-        window.location.href = "login.html";
-
-    });
-
-}
-
-
-// ======================================
-// BACK TO LOGIN
-// ======================================
-
+// LOGIN REDIRECT
 function showLogin() {
     window.location.href = "login.html";
 }

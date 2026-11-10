@@ -161,8 +161,7 @@ section > h2 {
 }
 
 /* FORMS */
-input,
-select {
+input, select {
     display: block;
     width: 100%;
     padding: 12px;
@@ -175,8 +174,7 @@ select {
     outline: none;
 }
 
-input:focus,
-select:focus {
+input:focus, select:focus {
     border-color: #2c7650;
     box-shadow: 0 0 0 2px rgba(44,118,80,0.1);
 }
@@ -233,8 +231,7 @@ table {
     margin-top: 15px;
 }
 
-th,
-td {
+th, td {
     padding: 14px;
     text-align: left;
     border-bottom: 1px solid #e7eee9;
@@ -324,19 +321,26 @@ tbody tr:hover {
 
 <body>
 
-<!-- ADMIN LOGIN CHECK -->
+<!-- ADMIN ACCESS CHECK -->
 <script>
-const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+(function() {
+    let currentUser = null;
 
-if (!currentUser || currentUser.role !== "Admin") {
-    alert("Admin access only!");
-    window.location.href = "login.html";
-}
+    try {
+        currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    } catch (error) {
+        currentUser = null;
+    }
+
+    if (!currentUser || currentUser.role !== "Admin") {
+        alert("Admin access only!");
+        window.location.replace("login.html");
+    }
+})();
 </script>
 
 <!-- SIDEBAR -->
 <aside>
-
     <div class="brand">
         <h2>KLYQ</h2>
         <p>Management System</p>
@@ -350,7 +354,6 @@ if (!currentUser || currentUser.role !== "Admin") {
         <button class="nav-btn" onclick="showPage('reports', this)">Reports</button>
         <button class="nav-btn" onclick="showPage('users', this)">User Management</button>
     </nav>
-
 </aside>
 
 <!-- HEADER -->
@@ -364,11 +367,9 @@ if (!currentUser || currentUser.role !== "Admin") {
 
 <!-- DASHBOARD -->
 <section id="dashboard">
-
     <h2>Dashboard Overview</h2>
 
     <div class="cards">
-
         <div class="card">
             <h3>Total Products</h3>
             <h2 id="totalProducts">0</h2>
@@ -388,7 +389,6 @@ if (!currentUser || currentUser.role !== "Admin") {
             <h3>Registered Users</h3>
             <h2 id="totalUsers">0</h2>
         </div>
-
     </div>
 
     <div class="card">
@@ -398,44 +398,35 @@ if (!currentUser || currentUser.role !== "Admin") {
             transactions, reports, and registered users here.
         </p>
     </div>
-
 </section>
 
 <!-- PRODUCTS -->
 <section id="products" class="hidden">
-
     <h2>Product Management</h2>
 
     <div class="card">
-
         <h3>Add New Product</h3>
 
         <form id="productForm">
-
-            <label>Product Name</label>
+            <label for="productName">Product Name</label>
             <input type="text" id="productName"
                 placeholder="Enter product name" required>
 
-            <label>Product Price (₱)</label>
+            <label for="productPrice">Product Price (₱)</label>
             <input type="number" id="productPrice"
                 placeholder="Enter price" min="0.01"
                 step="0.01" required>
 
-            <label>Product Stock</label>
+            <label for="productStock">Product Stock</label>
             <input type="number" id="productStock"
                 placeholder="Enter stock quantity"
                 min="0" step="1" required>
 
-            <button class="action" type="submit">
-                Add Product
-            </button>
-
+            <button class="action" type="submit">Add Product</button>
         </form>
-
     </div>
 
     <div class="card">
-
         <h3>Product List</h3>
 
         <div class="table-container">
@@ -448,22 +439,17 @@ if (!currentUser || currentUser.role !== "Admin") {
                         <th>Action</th>
                     </tr>
                 </thead>
-
                 <tbody id="productList"></tbody>
             </table>
         </div>
-
     </div>
-
 </section>
 
 <!-- INVENTORY -->
 <section id="inventory" class="hidden">
-
     <h2>Inventory Management</h2>
 
     <div class="card">
-
         <h3>Available Inventory</h3>
 
         <div class="table-container">
@@ -476,22 +462,17 @@ if (!currentUser || currentUser.role !== "Admin") {
                         <th>Status</th>
                     </tr>
                 </thead>
-
                 <tbody id="inventoryList"></tbody>
             </table>
         </div>
-
     </div>
-
 </section>
 
 <!-- TRANSACTIONS -->
 <section id="transactions" class="hidden">
-
     <h2>Transaction History</h2>
 
     <div class="card">
-
         <h3>All Cashier Sales Transactions</h3>
 
         <div class="table-container">
@@ -504,22 +485,17 @@ if (!currentUser || currentUser.role !== "Admin") {
                         <th>Total Amount</th>
                     </tr>
                 </thead>
-
                 <tbody id="transactionList"></tbody>
             </table>
         </div>
-
     </div>
-
 </section>
 
 <!-- REPORTS -->
 <section id="reports" class="hidden">
-
     <h2>Sales Reports</h2>
 
     <div class="cards">
-
         <div class="card">
             <h3>Total Revenue</h3>
             <h2 id="reportRevenue">₱0.00</h2>
@@ -529,18 +505,14 @@ if (!currentUser || currentUser.role !== "Admin") {
             <h3>Number of Sales</h3>
             <h2 id="reportCount">0</h2>
         </div>
-
     </div>
-
 </section>
 
-<!-- USER MANAGEMENT -->
+<!-- USERS -->
 <section id="users" class="hidden">
-
     <h2>User Management</h2>
 
     <div class="card">
-
         <h3>Registered Users</h3>
 
         <div class="table-container">
@@ -553,17 +525,17 @@ if (!currentUser || currentUser.role !== "Admin") {
                         <th>Role</th>
                     </tr>
                 </thead>
-
                 <tbody id="userList"></tbody>
             </table>
         </div>
-
     </div>
-
 </section>
 
 </main>
 </div>
+
+<!-- LOAD SHARED PRODUCT FUNCTIONS FIRST -->
+<script src="products.js"></script>
 
 <script>
 
@@ -574,6 +546,7 @@ if (!currentUser || currentUser.role !== "Admin") {
 let products = [];
 let transactions = [];
 let users = [];
+
 
 /* ==============================
    HELPER FUNCTIONS
@@ -594,14 +567,17 @@ function money(value) {
 }
 
 function loadData() {
-    products = JSON.parse(localStorage.getItem("gps_products")) || [];
-    transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
-    users = JSON.parse(localStorage.getItem("gps_users")) || [];
+    products = getGPSProducts();
+
+    try {
+        transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+        users = JSON.parse(localStorage.getItem("gps_users")) || [];
+    } catch (error) {
+        transactions = [];
+        users = [];
+    }
 }
 
-function saveProducts() {
-    localStorage.setItem("gps_products", JSON.stringify(products));
-}
 
 /* ==============================
    NAVIGATION
@@ -632,7 +608,6 @@ function showPage(page, button = null) {
         if (navButton) navButton.classList.add("active");
     }
 
-    // Refresh shared data whenever a page is opened
     loadData();
 
     updateDashboard();
@@ -641,6 +616,7 @@ function showPage(page, button = null) {
     renderTransactions();
     renderUsers();
 }
+
 
 /* ==============================
    DASHBOARD
@@ -671,6 +647,7 @@ function updateDashboard() {
         transactions.length;
 }
 
+
 /* ==============================
    ADD PRODUCT
 ============================== */
@@ -679,27 +656,13 @@ document.getElementById("productForm").addEventListener("submit", function(e) {
 
     e.preventDefault();
 
-    loadData();
-
     const name = document.getElementById("productName").value.trim();
     const price = Number(document.getElementById("productPrice").value);
     const stock = Number(document.getElementById("productStock").value);
 
-    if (!name || !Number.isFinite(price) || price <= 0 ||
-        !Number.isInteger(stock) || stock < 0) {
+    const newProduct = addGPSProduct(name, price, stock);
 
-        alert("Please enter valid product information.");
-        return;
-    }
-
-    products.push({
-        id: Date.now(),
-        name: name,
-        price: price,
-        stock: stock
-    });
-
-    saveProducts();
+    if (!newProduct) return;
 
     this.reset();
 
@@ -708,8 +671,8 @@ document.getElementById("productForm").addEventListener("submit", function(e) {
     renderInventory();
     updateDashboard();
 
-    alert("Product added successfully!");
 });
+
 
 /* ==============================
    DISPLAY PRODUCTS
@@ -720,7 +683,6 @@ function renderProducts() {
     const list = document.getElementById("productList");
 
     if (products.length === 0) {
-
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -728,7 +690,6 @@ function renderProducts() {
                 </td>
             </tr>
         `;
-
         return;
     }
 
@@ -739,13 +700,14 @@ function renderProducts() {
             <td>${Number(p.stock)}</td>
             <td>
                 <button class="delete-btn"
-                    onclick="deleteProduct(${Number(p.id)})">
+                    onclick="deleteProduct('${escapeHTML(p.id)}')">
                     Delete
                 </button>
             </td>
         </tr>
     `).join("");
 }
+
 
 /* ==============================
    DELETE PRODUCT
@@ -757,19 +719,17 @@ function deleteProduct(id) {
         return;
     }
 
-    loadData();
+    const success = deleteGPSProduct(id);
 
-    products = products.filter(p => Number(p.id) !== Number(id));
-
-    saveProducts();
+    if (!success) return;
 
     loadData();
     renderProducts();
     renderInventory();
     updateDashboard();
 
-    alert("Product deleted successfully!");
 }
+
 
 /* ==============================
    INVENTORY
@@ -780,7 +740,6 @@ function renderInventory() {
     const list = document.getElementById("inventoryList");
 
     if (products.length === 0) {
-
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -788,7 +747,6 @@ function renderInventory() {
                 </td>
             </tr>
         `;
-
         return;
     }
 
@@ -814,6 +772,7 @@ function renderInventory() {
     }).join("");
 }
 
+
 /* ==============================
    TRANSACTIONS
 ============================== */
@@ -823,7 +782,6 @@ function renderTransactions() {
     const list = document.getElementById("transactionList");
 
     if (transactions.length === 0) {
-
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -831,7 +789,6 @@ function renderTransactions() {
                 </td>
             </tr>
         `;
-
         return;
     }
 
@@ -845,6 +802,7 @@ function renderTransactions() {
     `).join("");
 }
 
+
 /* ==============================
    USER MANAGEMENT
 ============================== */
@@ -854,7 +812,6 @@ function renderUsers() {
     const list = document.getElementById("userList");
 
     if (users.length === 0) {
-
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -862,7 +819,6 @@ function renderUsers() {
                 </td>
             </tr>
         `;
-
         return;
     }
 
@@ -875,6 +831,7 @@ function renderUsers() {
         </tr>
     `).join("");
 }
+
 
 /* ==============================
    LOGOUT
@@ -890,6 +847,40 @@ function logout() {
 
     window.location.href = "login.html";
 }
+
+
+/* ==============================
+   AUTOMATIC PRODUCT REFRESH
+============================== */
+
+onGPSProductsChanged(function(updatedProducts) {
+
+    products = updatedProducts;
+
+    renderProducts();
+    renderInventory();
+    updateDashboard();
+
+});
+
+
+/* ==============================
+   OTHER DATA REFRESH
+============================== */
+
+window.addEventListener("storage", function(event) {
+
+    if (event.key === "gps_tx" || event.key === "gps_users") {
+
+        loadData();
+
+        updateDashboard();
+        renderTransactions();
+        renderUsers();
+    }
+
+});
+
 
 /* ==============================
    INITIALIZE ADMIN DASHBOARD

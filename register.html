@@ -61,6 +61,22 @@
                 required
             >
 
+            <label for="regRole">Register As</label>
+            <select id="regRole" required>
+                <option value="">Select Role</option>
+                <option value="Admin">Admin</option>
+                <option value="Cashier">Cashier</option>
+            </select>
+
+            <div id="adminCodeContainer" style="display: none;">
+                <label for="adminCode">Admin Access Code</label>
+                <input
+                    type="password"
+                    id="adminCode"
+                    placeholder="Enter admin access code"
+                >
+            </div>
+
             <button type="submit">Register</button>
 
         </form>
@@ -74,7 +90,6 @@
 
     </div>
 
-    <!-- REGISTRATION JAVASCRIPT -->
     <script src="register.js"></script>
 
 </body>
