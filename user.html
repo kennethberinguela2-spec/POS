@@ -4,23 +4,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>KLYQ | Cashier Dashboard</title>
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .empty-message {
+            padding: 20px;
+            text-align: center;
+            color: #75847a;
+        }
+
+        .stock-status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 11px;
+        }
+
+        .stock-available {
+            background: #e1f4e7;
+            color: #287442;
+        }
+
+        .stock-low {
+            background: #fff2d6;
+            color: #9b6b0d;
+        }
+
+        .stock-out {
+            background: #fce6e6;
+            color: #b83d3d;
+        }
+
+        .cart-total {
+            margin-top: 20px;
+            text-align: right;
+            color: #174d36;
+        }
+
+        .pos-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .remove-item {
+            background: #b83d3d !important;
+            color: white;
+            border: none;
+            padding: 7px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .receipt {
+            background: white;
+            color: black;
+            width: 100%;
+            max-width: 380px;
+            margin: 20px auto;
+            padding: 25px;
+            border: 1px solid #ddd;
+            font-family: Arial, sans-serif;
+        }
+
+        .receipt h2,
+        .receipt p {
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .receipt table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .receipt th,
+        .receipt td {
+            padding: 8px 4px;
+            text-align: left;
+            border-bottom: 1px dashed #ccc;
+            font-size: 12px;
+        }
+
+        .receipt hr {
+            border: none;
+            border-top: 1px dashed #777;
+            margin: 12px 0;
+        }
+
+        .receipt-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .receipt-actions button {
+            padding: 11px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #174d36;
+            color: white;
+            cursor: pointer;
+        }
+
+        @media print {
+            @page {
+                size: 80mm auto;
+                margin: 5mm;
+            }
+
+            body.printing * {
+                visibility: hidden !important;
+            }
+
+            body.printing #receipt,
+            body.printing #receipt * {
+                visibility: visible !important;
+            }
+
+            body.printing #receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                padding: 5px;
+                border: none;
+            }
+
+            body.printing .receipt-actions {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
 <script>
-const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+function readStorage(key, fallback) {
+    try {
+        const data = JSON.parse(localStorage.getItem(key));
+        return data ?? fallback;
+    } catch (error) {
+        console.error("Storage error:", error);
+        return fallback;
+    }
+}
+
+const currentUser = readStorage("currentUser", null);
 
 if (!currentUser || currentUser.role !== "Cashier") {
     alert("Please login using a cashier account.");
-    window.location.href = "login.html";
+    window.location.replace("login.html");
 }
 </script>
 
 <div class="pos-dashboard">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <div class="brand">
@@ -41,10 +194,8 @@ if (!currentUser || currentUser.role !== "Cashier") {
 
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
 
-        <!-- HEADER -->
         <header class="topbar">
 
             <div>
@@ -62,7 +213,6 @@ if (!currentUser || currentUser.role !== "Cashier") {
 
         </header>
 
-        <!-- WELCOME -->
         <section class="welcome-banner">
             <div>
                 <h2>Hello, <span id="welcomeName">Cashier</span>!</h2>
@@ -71,7 +221,6 @@ if (!currentUser || currentUser.role !== "Cashier") {
             <div class="welcome-icon">🛒</div>
         </section>
 
-        <!-- DASHBOARD CARDS -->
         <section class="dashboard-cards">
 
             <div class="card">
@@ -97,18 +246,17 @@ if (!currentUser || currentUser.role !== "Cashier") {
 
         </section>
 
-        <!-- DYNAMIC CONTENT -->
         <section class="content-panel" id="content">
             <h3>Quick Overview</h3>
             <p>Select a feature from the sidebar to get started.</p>
         </section>
 
-        <!-- FOOTER -->
         <footer class="dashboard-footer">
             KLYQ Grocery Management System © 2026 | Cashier Panel
         </footer>
 
     </main>
+
 </div>
 
 <script>
@@ -117,9 +265,12 @@ if (!currentUser || currentUser.role !== "Cashier") {
    DATABASE
 ========================== */
 
-let products = JSON.parse(localStorage.getItem("gps_products")) || [];
-let transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+let products = readStorage("gps_products", []);
+let transactions = readStorage("gps_tx", []);
 let cart = [];
+
+if (!Array.isArray(products)) products = [];
+if (!Array.isArray(transactions)) transactions = [];
 
 /* ==========================
    HELPER FUNCTIONS
@@ -136,12 +287,28 @@ function escapeHTML(value) {
 }
 
 function money(value) {
-    return Number(value || 0).toFixed(2);
+    const amount = Number(value);
+    return (Number.isFinite(amount) ? amount : 0).toFixed(2);
+}
+
+function loadData() {
+    products = readStorage("gps_products", []);
+    transactions = readStorage("gps_tx", []);
+
+    if (!Array.isArray(products)) products = [];
+    if (!Array.isArray(transactions)) transactions = [];
 }
 
 function saveData() {
-    localStorage.setItem("gps_products", JSON.stringify(products));
-    localStorage.setItem("gps_tx", JSON.stringify(transactions));
+    try {
+        localStorage.setItem("gps_products", JSON.stringify(products));
+        localStorage.setItem("gps_tx", JSON.stringify(transactions));
+        return true;
+    } catch (error) {
+        console.error("Save error:", error);
+        alert("Unable to save data.");
+        return false;
+    }
 }
 
 function getTotal() {
@@ -150,18 +317,19 @@ function getTotal() {
     }, 0);
 }
 
+function getCashierName() {
+    return currentUser.name || currentUser.username || "Cashier";
+}
+
 /* ==========================
    CASHIER PROFILE
 ========================== */
 
-document.getElementById("userName").textContent =
-    currentUser.name || currentUser.username;
-
-document.getElementById("welcomeName").textContent =
-    currentUser.name || currentUser.username;
+document.getElementById("userName").textContent = getCashierName();
+document.getElementById("welcomeName").textContent = getCashierName();
 
 document.getElementById("profileIcon").textContent =
-    (currentUser.name || currentUser.username || "C").charAt(0).toUpperCase();
+    getCashierName().charAt(0).toUpperCase();
 
 /* ==========================
    NAVIGATION
@@ -172,29 +340,26 @@ function setActive(button) {
         btn.classList.remove("active");
     });
 
-    if (button) {
-        button.classList.add("active");
-    }
+    if (button) button.classList.add("active");
 }
 
 function showHome(button) {
 
-    setActive(button);
+    if (button) setActive(button);
 
-    products = JSON.parse(localStorage.getItem("gps_products")) || [];
-    transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+    loadData();
 
     const mySales = transactions.filter(sale =>
         sale.cashier === currentUser.username
     );
 
     const totalSales = mySales.reduce((sum, sale) =>
-        sum + Number(sale.total || 0), 0
+        sum + (Number(sale.total) || 0), 0
     );
 
     document.getElementById("content").innerHTML = `
         <h3>Quick Overview</h3>
-        <p>Welcome back, ${escapeHTML(currentUser.name || currentUser.username)}!</p>
+        <p>Welcome back, ${escapeHTML(getCashierName())}!</p>
 
         <div class="dashboard-cards">
 
@@ -227,13 +392,10 @@ function showHome(button) {
 ========================== */
 
 function logout() {
-
-    if (!confirm("Are you sure you want to logout?")) {
-        return;
-    }
+    if (!confirm("Are you sure you want to logout?")) return;
 
     localStorage.removeItem("currentUser");
-    window.location.href = "login.html";
+    window.location.replace("login.html");
 }
 
 /* ==========================
@@ -244,7 +406,7 @@ function viewProducts(button) {
 
     if (button) setActive(button);
 
-    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+    loadData();
 
     let html = `
         <h3>Available Products</h3>
@@ -264,22 +426,39 @@ function viewProducts(button) {
     `;
 
     if (products.length === 0) {
-        html += `<tr><td colspan="4">No products available.</td></tr>`;
+        html += `
+            <tr>
+                <td colspan="4">
+                    <div class="empty-message">No products available.</div>
+                </td>
+            </tr>
+        `;
     } else {
         products.forEach(product => {
 
-            let status = product.stock <= 0
-                ? "Out of Stock"
-                : product.stock <= 5
-                    ? "Low Stock"
-                    : "Available";
+            const stock = Number(product.stock) || 0;
+
+            let status = "Available";
+            let statusClass = "stock-available";
+
+            if (stock <= 0) {
+                status = "Out of Stock";
+                statusClass = "stock-out";
+            } else if (stock <= 5) {
+                status = "Low Stock";
+                statusClass = "stock-low";
+            }
 
             html += `
                 <tr>
                     <td>${escapeHTML(product.name)}</td>
                     <td>₱${money(product.price)}</td>
-                    <td>${Number(product.stock)}</td>
-                    <td>${status}</td>
+                    <td>${stock}</td>
+                    <td>
+                        <span class="stock-status ${statusClass}">
+                            ${status}
+                        </span>
+                    </td>
                 </tr>
             `;
         });
@@ -298,7 +477,14 @@ function openPOS(button) {
 
     if (button) setActive(button);
 
-    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+    loadData();
+    cart = [];
+
+    const availableProducts = products.filter(p =>
+        p.id !== undefined &&
+        p.id !== null &&
+        Number(p.stock) > 0
+    );
 
     document.getElementById("content").innerHTML = `
 
@@ -309,26 +495,30 @@ function openPOS(button) {
 
             <h3>Select Product</h3>
 
-            <label>Product</label>
+            <label for="saleProduct">Product</label>
 
             <select id="saleProduct">
                 <option value="">Select a product</option>
-                ${products.filter(p => Number(p.stock) > 0).map(p => `
-                    <option value="${Number(p.id)}">
+
+                ${availableProducts.map(p => `
+                    <option value="${escapeHTML(p.id)}">
                         ${escapeHTML(p.name)} - ₱${money(p.price)}
                         (${Number(p.stock)} available)
                     </option>
                 `).join("")}
+
             </select>
 
-            <label>Quantity</label>
+            <label for="saleQuantity">Quantity</label>
 
             <input type="number" id="saleQuantity"
                 min="1" step="1" value="1">
 
-            <button class="action" onclick="addToCart()">
-                Add to Cart
-            </button>
+            <div class="pos-buttons">
+                <button class="action" onclick="addToCart()">
+                    Add to Cart
+                </button>
+            </div>
 
         </div>
 
@@ -348,16 +538,13 @@ function openPOS(button) {
                         </tr>
                     </thead>
 
-                    <tbody id="cartList">
-                        <tr>
-                            <td colspan="5">Your cart is empty.</td>
-                        </tr>
-                    </tbody>
-
+                    <tbody id="cartList"></tbody>
                 </table>
             </div>
 
-            <h3>Total: ₱<span id="cartTotal">0.00</span></h3>
+            <h3 class="cart-total">
+                Total: ₱<span id="cartTotal">0.00</span>
+            </h3>
 
         </div>
 
@@ -365,15 +552,17 @@ function openPOS(button) {
 
             <h3>Payment</h3>
 
-            <label>Cash Received (₱)</label>
+            <label for="cashReceived">Cash Received (₱)</label>
 
             <input type="number" id="cashReceived"
                 min="0" step="0.01"
                 placeholder="Enter cash amount">
 
-            <button class="action" onclick="checkout()">
-                Checkout
-            </button>
+            <div class="pos-buttons">
+                <button class="action" onclick="checkout()">
+                    Checkout
+                </button>
+            </div>
 
             <h3>Change: ₱<span id="changeAmount">0.00</span></h3>
 
@@ -381,24 +570,24 @@ function openPOS(button) {
 
     `;
 
-    cart = [];
     renderCart();
 }
 
 /* ==========================
-   ADD TO CART
+   ADD TO CART - FIXED
 ========================== */
 
 function addToCart() {
 
-    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+    loadData();
 
-    const id = Number(document.getElementById("saleProduct").value);
-    const quantity = Number(document.getElementById("saleQuantity").value);
+    const select = document.getElementById("saleProduct");
+    const quantityInput = document.getElementById("saleQuantity");
 
-    const product = products.find(p => Number(p.id) === id);
+    const selectedId = select.value;
+    const quantity = Number(quantityInput.value);
 
-    if (!product) {
+    if (selectedId === "") {
         alert("Please select a product.");
         return;
     }
@@ -408,11 +597,37 @@ function addToCart() {
         return;
     }
 
-    const existing = cart.find(item => item.id === id);
+    // Supports both numeric and string product IDs.
+    const product = products.find(p =>
+        String(p.id) === String(selectedId)
+    );
+
+    if (!product) {
+        alert("Product not found in this device's storage. Please check your product data.");
+        return;
+    }
+
+    const stock = Number(product.stock);
+    const price = Number(product.price);
+
+    if (!Number.isFinite(stock) || stock <= 0) {
+        alert("This product is out of stock.");
+        return;
+    }
+
+    if (!Number.isFinite(price) || price < 0) {
+        alert("Invalid product price.");
+        return;
+    }
+
+    const existing = cart.find(item =>
+        String(item.id) === String(product.id)
+    );
+
     const currentQuantity = existing ? existing.quantity : 0;
 
-    if (currentQuantity + quantity > Number(product.stock)) {
-        alert("Not enough stock available!");
+    if (currentQuantity + quantity > stock) {
+        alert("Not enough stock available! Available stock: " + stock);
         return;
     }
 
@@ -420,16 +635,16 @@ function addToCart() {
         existing.quantity += quantity;
     } else {
         cart.push({
-            id: Number(product.id),
+            id: product.id,
             name: product.name,
-            price: Number(product.price),
+            price: price,
             quantity: quantity
         });
     }
 
     renderCart();
 
-    document.getElementById("saleQuantity").value = 1;
+    quantityInput.value = 1;
 }
 
 /* ==========================
@@ -446,7 +661,9 @@ function renderCart() {
 
         list.innerHTML = `
             <tr>
-                <td colspan="5">Your cart is empty.</td>
+                <td colspan="5">
+                    <div class="empty-message">Your cart is empty.</div>
+                </td>
             </tr>
         `;
 
@@ -459,8 +676,8 @@ function renderCart() {
                 <td>${item.quantity}</td>
                 <td>₱${money(item.price * item.quantity)}</td>
                 <td>
-                    <button class="delete-btn"
-                        onclick="removeFromCart(${Number(item.id)})">
+                    <button class="remove-item"
+                        onclick="removeFromCart('${escapeHTML(item.id)}')">
                         Remove
                     </button>
                 </td>
@@ -479,7 +696,9 @@ function renderCart() {
 
 function removeFromCart(id) {
 
-    cart = cart.filter(item => item.id !== id);
+    cart = cart.filter(item =>
+        String(item.id) !== String(id)
+    );
 
     renderCart();
 }
@@ -497,9 +716,11 @@ function calculateChange() {
     const cash = Number(cashInput.value);
     const total = getTotal();
 
-    const change = cash >= total && cashInput.value.trim() !== ""
-        ? cash - total
-        : 0;
+    const change = cashInput.value.trim() !== "" &&
+        Number.isFinite(cash) &&
+        cash >= total
+            ? cash - total
+            : 0;
 
     document.getElementById("changeAmount").textContent = money(change);
 }
@@ -521,33 +742,46 @@ function checkout() {
         return;
     }
 
-    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+    loadData();
 
     const total = getTotal();
 
-    const cashInput = document.getElementById("cashReceived").value;
-    const cash = Number(cashInput);
+    const cashInput = document.getElementById("cashReceived");
+    const cash = Number(cashInput.value);
 
-    if (cashInput.trim() === "" || !Number.isFinite(cash) || cash < total) {
+    if (
+        cashInput.value.trim() === "" ||
+        !Number.isFinite(cash) ||
+        cash < total
+    ) {
         alert("Insufficient cash! Please enter the correct amount.");
         return;
     }
 
-    // Validate stock again
+    // Check the latest available stock.
     for (const item of cart) {
 
-        const product = products.find(p => Number(p.id) === item.id);
+        const product = products.find(p =>
+            String(p.id) === String(item.id)
+        );
 
-        if (!product || Number(product.stock) < item.quantity) {
+        if (!product) {
+            alert("Product not found: " + item.name);
+            return;
+        }
+
+        if (Number(product.stock) < item.quantity) {
             alert("Insufficient stock for " + item.name);
             return;
         }
     }
 
-    // Deduct stock
+    // Deduct stock.
     products.forEach(product => {
 
-        const item = cart.find(c => c.id === Number(product.id));
+        const item = cart.find(c =>
+            String(c.id) === String(product.id)
+        );
 
         if (item) {
             product.stock = Number(product.stock) - item.quantity;
@@ -555,28 +789,30 @@ function checkout() {
     });
 
     const transaction = {
-        id: Date.now(),
+        id: "TXN-" + Date.now(),
         cashier: currentUser.username,
+        cashierName: getCashierName(),
         date: new Date().toLocaleString(),
         total: total,
         cash: cash,
         change: cash - total,
-        items: cart.map(item => ({...item}))
+        items: cart.map(item => ({ ...item }))
     };
-
-    transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
 
     transactions.push(transaction);
 
-    saveData();
-
-    generateReceipt(transaction);
+    if (!saveData()) return;
 
     cart = [];
 
+    generateReceipt(transaction);
+
     alert("Sale completed successfully!");
 
-    showReceipt();
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 }
 
 /* ==========================
@@ -587,77 +823,76 @@ function generateReceipt(transaction) {
 
     document.getElementById("content").innerHTML = `
 
-        <div id="receiptSection">
+        <h3>Transaction Completed</h3>
+        <p>Your transaction has been saved successfully.</p>
 
-            <div class="receipt" id="receipt">
+        <div id="receipt" class="receipt">
 
-                <h2>KLYQ GROCERY</h2>
-                <p>SALES RECEIPT</p>
+            <h2>KLYQ GROCERY</h2>
+            <p>SALES RECEIPT</p>
 
-                <hr>
+            <hr>
 
-                <p>Receipt No: ${transaction.id}</p>
-                <p>Date: ${escapeHTML(transaction.date)}</p>
-                <p>Cashier: ${escapeHTML(currentUser.name || currentUser.username)}</p>
+            <p>Receipt No: ${escapeHTML(transaction.id)}</p>
+            <p>Date: ${escapeHTML(transaction.date)}</p>
+            <p>Cashier: ${escapeHTML(transaction.cashierName)}</p>
 
-                <hr>
+            <hr>
 
-                <table>
-                    <thead>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    ${transaction.items.map(item => `
                         <tr>
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Amount</th>
+                            <td>${escapeHTML(item.name)}</td>
+                            <td>${item.quantity}</td>
+                            <td>₱${money(item.price * item.quantity)}</td>
                         </tr>
-                    </thead>
+                    `).join("")}
+                </tbody>
+            </table>
 
-                    <tbody>
-                        ${transaction.items.map(item => `
-                            <tr>
-                                <td>${escapeHTML(item.name)}</td>
-                                <td>${item.quantity}</td>
-                                <td>₱${money(item.price * item.quantity)}</td>
-                            </tr>
-                        `).join("")}
-                    </tbody>
-                </table>
+            <hr>
 
-                <hr>
+            <p><strong>Total: ₱${money(transaction.total)}</strong></p>
+            <p>Cash: ₱${money(transaction.cash)}</p>
+            <p>Change: ₱${money(transaction.change)}</p>
 
-                <p><strong>Total: ₱${money(transaction.total)}</strong></p>
-                <p>Cash: ₱${money(transaction.cash)}</p>
-                <p>Change: ₱${money(transaction.change)}</p>
+            <hr>
 
-                <hr>
-
-                <p>Thank you for shopping!</p>
-                <p>Please come again.</p>
-
-            </div>
-
-            <div class="no-print" style="text-align:center; margin-top:20px;">
-
-                <button class="action" onclick="window.print()">
-                    Print Receipt
-                </button>
-
-                <button class="action" onclick="openPOS()">
-                    New Transaction
-                </button>
-
-                <button class="action" onclick="viewSales()">
-                    View My Sales
-                </button>
-
-            </div>
+            <p>Thank you for shopping!</p>
+            <p>Please come again.</p>
 
         </div>
 
+        <div class="receipt-actions">
+
+            <button onclick="printReceipt()">Print Receipt</button>
+            <button onclick="openPOS()">New Transaction</button>
+            <button onclick="viewSales()">View My Sales</button>
+
+        </div>
     `;
 }
 
-function showReceipt() {
-    window.scrollTo(0, 0);
+/* ==========================
+   PRINT RECEIPT
+========================== */
+
+function printReceipt() {
+
+    document.body.classList.add("printing");
+
+    window.print();
+
+    document.body.classList.remove("printing");
 }
 
 /* ==========================
@@ -668,15 +903,24 @@ function viewSales(button) {
 
     if (button) setActive(button);
 
-    transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+    loadData();
 
     const mySales = transactions.filter(sale =>
         sale.cashier === currentUser.username
     );
 
+    const totalSales = mySales.reduce((sum, sale) =>
+        sum + (Number(sale.total) || 0), 0
+    );
+
     let html = `
         <h3>My Sales Transactions</h3>
         <p>Your recorded customer transactions.</p>
+
+        <div class="card">
+            <h3>Total Sales: ₱${money(totalSales)}</h3>
+            <p>Number of Transactions: ${mySales.length}</p>
+        </div>
 
         <div class="table-container">
             <table>
@@ -696,7 +940,9 @@ function viewSales(button) {
 
         html += `
             <tr>
-                <td colspan="5">No sales recorded.</td>
+                <td colspan="5">
+                    <div class="empty-message">No sales recorded yet.</div>
+                </td>
             </tr>
         `;
 
@@ -713,7 +959,6 @@ function viewSales(button) {
                     <td>₱${money(sale.change)}</td>
                 </tr>
             `;
-
         });
     }
 
@@ -723,9 +968,22 @@ function viewSales(button) {
 }
 
 /* ==========================
+   REFRESH WHEN OTHER TAB CHANGES
+========================== */
+
+window.addEventListener("storage", function(e) {
+
+    if (e.key === "gps_products" || e.key === "gps_tx") {
+        loadData();
+    }
+
+});
+
+/* ==========================
    INITIALIZE
 ========================== */
 
+loadData();
 showHome(document.querySelector(".nav-btn"));
 
 </script>
