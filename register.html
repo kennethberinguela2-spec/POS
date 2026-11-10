@@ -1,129 +1,81 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Grocery POS - Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>KLYQ System - Register</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="auth">
-    <h2>KLYQ SYSTEM</h2>
-    <h3>Create Account</h3>
+    <div class="auth">
 
-    <form id="register">
+        <h2>KLYQ SYSTEM</h2>
+        <h3>Create Account</h3>
 
-        <label>Register As</label>
-        <select id="regRole" required>
-            <option value="Cashier">Cashier</option>
-            <option value="Admin">Admin</option>
-        </select>
+        <form id="registerForm">
 
-        <label>Full Name</label>
-        <input type="text" id="regName" placeholder="Enter full name" required>
+            <label for="regName">Full Name</label>
+            <input
+                type="text"
+                id="regName"
+                placeholder="Enter full name"
+                required
+            >
 
-        <label>Username</label>
-        <input type="text" id="regUsername" placeholder="Enter username" required>
+            <label for="regUser">Username</label>
+            <input
+                type="text"
+                id="regUser"
+                placeholder="Enter username"
+                required
+            >
 
-        <label>Email</label>
-        <input type="email" id="regEmail" placeholder="Enter email" required>
+            <label for="regEmail">Email</label>
+            <input
+                type="email"
+                id="regEmail"
+                placeholder="Enter email address"
+                required
+            >
 
-        <label>Password</label>
-        <input type="password" id="regPassword" minlength="6" placeholder="Create password" required>
+            <label for="regPass">Password</label>
+            <input
+                type="password"
+                id="regPass"
+                minlength="6"
+                placeholder="Create password"
+                required
+            >
 
-        <label>Confirm Password</label>
-        <input type="password" id="regConfirmPassword" placeholder="Confirm password" required>
+            <label for="regConfirmPass">Confirm Password</label>
+            <input
+                type="password"
+                id="regConfirmPass"
+                minlength="6"
+                placeholder="Confirm password"
+                required
+            >
 
-        <div id="adminCodeSection" style="display:none;">
-            <label>Admin Access Code</label>
-            <input type="password" id="adminCode" placeholder="Enter admin access code">
-        </div>
+            <button type="submit">Register</button>
 
-        <button type="submit">Register</button>
+        </form>
 
-    </form>
+        <p>
+            Already have an account?
+            <button type="button" onclick="showLogin()">
+                Login
+            </button>
+        </p>
 
-    <p>Already have an account?
-        <button type="button" onclick="showLogin()">Login</button>
-    </p>
-</div>
+    </div>
 
-<script>
-
-// DEMO ACCESS CODE ONLY
-// In a real system, validate this securely on the server.
-const ADMIN_CODE = "GROCERY2026";
-
-function showLogin() {
-    window.location.href = "login.html";
-}
-
-// SHOW ADMIN CODE FIELD
-document.getElementById("regRole").addEventListener("change", function() {
-    let section = document.getElementById("adminCodeSection");
-    let code = document.getElementById("adminCode");
-
-    if (this.value === "Admin") {
-        section.style.display = "block";
-        code.required = true;
-    } else {
-        section.style.display = "none";
-        code.required = false;
-        code.value = "";
-    }
-});
-
-// REGISTER
-document.getElementById("register").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    let users = JSON.parse(localStorage.getItem("gps_users")) || [];
-
-    let name = document.getElementById("regName").value.trim();
-    let username = document.getElementById("regUsername").value.trim();
-    let email = document.getElementById("regEmail").value.trim();
-    let password = document.getElementById("regPassword").value;
-    let confirmPassword = document.getElementById("regConfirmPassword").value;
-    let role = document.getElementById("regRole").value;
-    let adminCode = document.getElementById("adminCode").value;
-
-    if (password !== confirmPassword) {
-        alert("Passwords do not match!");
-        return;
-    }
-
-    if (role === "Admin" && adminCode !== ADMIN_CODE) {
-        alert("Invalid Admin Access Code!");
-        return;
-    }
-
-    let existingUser = users.find(user =>
-        user.username.toLowerCase() === username.toLowerCase() ||
-        user.email.toLowerCase() === email.toLowerCase()
-    );
-
-    if (existingUser) {
-        alert("Username or email already exists!");
-        return;
-    }
-
-    let newUser = {
-        name: name,
-        username: username,
-        email: email,
-        password: password,
-        role: role
-    };
-
-    users.push(newUser);
-
-    localStorage.setItem("gps_users", JSON.stringify(users));
-
-    alert(role + " account successfully registered!");
-
-    window.location.href = "login.html";
-});
-</script>
+    <!-- REGISTRATION JAVASCRIPT -->
+    <script src="register.js"></script>
 
 </body>
 </html>
