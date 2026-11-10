@@ -251,16 +251,6 @@ tbody tr:hover {
     background: #f7faf8;
 }
 
-/* EMPTY STATE */
-.empty-state {
-    background: #f4f8f5;
-    padding: 30px;
-    margin-top: 15px;
-    text-align: center;
-    border-radius: 10px;
-    color: #75847a;
-}
-
 /* RESPONSIVE */
 @media (max-width: 1050px) {
     .cards {
@@ -534,10 +524,24 @@ tbody tr:hover {
 </main>
 </div>
 
-<!-- LOAD SHARED PRODUCT FUNCTIONS FIRST -->
+<!-- LOAD PRODUCTS.JS FIRST -->
 <script src="products.js"></script>
 
 <script>
+
+/* ==============================
+   CHECK PRODUCTS.JS
+============================== */
+
+if (
+    typeof getGPSProducts !== "function" ||
+    typeof addGPSProduct !== "function" ||
+    typeof deleteGPSProduct !== "function" ||
+    typeof onGPSProductsChanged !== "function"
+) {
+    alert("products.js was not loaded. Check if it is in the same folder as admin.html.");
+}
+
 
 /* ==============================
    DATABASE
@@ -567,15 +571,24 @@ function money(value) {
 }
 
 function loadData() {
+
     products = getGPSProducts();
 
     try {
-        transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
-        users = JSON.parse(localStorage.getItem("gps_users")) || [];
+        transactions = JSON.parse(
+            localStorage.getItem("gps_tx")
+        ) || [];
+
+        users = JSON.parse(
+            localStorage.getItem("gps_users")
+        ) || [];
+
     } catch (error) {
+        console.error("Loading data error:", error);
         transactions = [];
         users = [];
     }
+
 }
 
 
@@ -601,11 +614,6 @@ function showPage(page, button = null) {
 
     if (button) {
         button.classList.add("active");
-    } else {
-        const navButton = [...document.querySelectorAll(".nav-btn")]
-            .find(btn => btn.getAttribute("onclick").includes("'" + page + "'"));
-
-        if (navButton) navButton.classList.add("active");
     }
 
     loadData();
@@ -660,16 +668,33 @@ document.getElementById("productForm").addEventListener("submit", function(e) {
     const price = Number(document.getElementById("productPrice").value);
     const stock = Number(document.getElementById("productStock").value);
 
-    const newProduct = addGPSProduct(name, price, stock);
+    if (!name || !Number.isFinite(price) || price <= 0 ||
+        !Number.isInteger(stock) || stock < 0) {
 
-    if (!newProduct) return;
+        alert("Please enter valid product information!");
+        return;
+    }
 
-    this.reset();
+    if (typeof addGPSProduct !== "function") {
+        alert("Product system is not loaded. Check products.js.");
+        return;
+    }
+
+    const result = addGPSProduct(name, price, stock);
+
+    if (!result) {
+        return;
+    }
 
     loadData();
+
     renderProducts();
     renderInventory();
     updateDashboard();
+
+    this.reset();
+
+    alert("Product added successfully!");
 
 });
 
@@ -682,7 +707,10 @@ function renderProducts() {
 
     const list = document.getElementById("productList");
 
+    products = getGPSProducts();
+
     if (products.length === 0) {
+
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -690,6 +718,7 @@ function renderProducts() {
                 </td>
             </tr>
         `;
+
         return;
     }
 
@@ -706,6 +735,7 @@ function renderProducts() {
             </td>
         </tr>
     `).join("");
+
 }
 
 
@@ -719,14 +749,20 @@ function deleteProduct(id) {
         return;
     }
 
-    const success = deleteGPSProduct(id);
+    const result = deleteGPSProduct(id);
 
-    if (!success) return;
+    if (!result) {
+        alert("Unable to delete product. Product may not exist.");
+        return;
+    }
 
     loadData();
+
     renderProducts();
     renderInventory();
     updateDashboard();
+
+    alert("Product deleted successfully!");
 
 }
 
@@ -740,6 +776,7 @@ function renderInventory() {
     const list = document.getElementById("inventoryList");
 
     if (products.length === 0) {
+
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -747,6 +784,7 @@ function renderInventory() {
                 </td>
             </tr>
         `;
+
         return;
     }
 
@@ -770,6 +808,7 @@ function renderInventory() {
         `;
 
     }).join("");
+
 }
 
 
@@ -782,6 +821,7 @@ function renderTransactions() {
     const list = document.getElementById("transactionList");
 
     if (transactions.length === 0) {
+
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -789,6 +829,7 @@ function renderTransactions() {
                 </td>
             </tr>
         `;
+
         return;
     }
 
@@ -800,6 +841,7 @@ function renderTransactions() {
             <td>₱${money(tx.total)}</td>
         </tr>
     `).join("");
+
 }
 
 
@@ -812,6 +854,7 @@ function renderUsers() {
     const list = document.getElementById("userList");
 
     if (users.length === 0) {
+
         list.innerHTML = `
             <tr>
                 <td colspan="4" style="text-align:center;">
@@ -819,6 +862,7 @@ function renderUsers() {
                 </td>
             </tr>
         `;
+
         return;
     }
 
@@ -830,6 +874,7 @@ function renderUsers() {
             <td>${escapeHTML(user.role || "")}</td>
         </tr>
     `).join("");
+
 }
 
 
@@ -846,6 +891,7 @@ function logout() {
     localStorage.removeItem("currentUser");
 
     window.location.href = "login.html";
+
 }
 
 
@@ -877,6 +923,7 @@ window.addEventListener("storage", function(event) {
         updateDashboard();
         renderTransactions();
         renderUsers();
+
     }
 
 });
@@ -887,6 +934,13 @@ window.addEventListener("storage", function(event) {
 ============================== */
 
 loadData();
+
+updateDashboard();
+renderProducts();
+renderInventory();
+renderTransactions();
+renderUsers();
+
 showPage("dashboard");
 
 </script>
