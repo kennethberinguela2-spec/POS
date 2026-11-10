@@ -1,0 +1,734 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KLYQ | Cashier Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<script>
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+if (!currentUser || currentUser.role !== "Cashier") {
+    alert("Please login using a cashier account.");
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="pos-dashboard">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <h2>KLYQ</h2>
+            <p>Grocery Management System</p>
+        </div>
+
+        <nav>
+            <button class="nav-btn active" onclick="showHome(this)">Dashboard</button>
+            <button class="nav-btn" onclick="openPOS(this)">Point of Sale</button>
+            <button class="nav-btn" onclick="viewProducts(this)">Products</button>
+            <button class="nav-btn" onclick="viewSales(this)">My Sales</button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- HEADER -->
+        <header class="topbar">
+
+            <div>
+                <h2>Cashier Dashboard</h2>
+                <p>Welcome to your workspace.</p>
+            </div>
+
+            <div class="profile">
+                <div class="profile-icon" id="profileIcon">C</div>
+                <div>
+                    <strong id="userName">Cashier</strong>
+                    <small>Cashier Account</small>
+                </div>
+            </div>
+
+        </header>
+
+        <!-- WELCOME -->
+        <section class="welcome-banner">
+            <div>
+                <h2>Hello, <span id="welcomeName">Cashier</span>!</h2>
+                <p>Ready to serve customers today?</p>
+            </div>
+            <div class="welcome-icon">🛒</div>
+        </section>
+
+        <!-- DASHBOARD CARDS -->
+        <section class="dashboard-cards">
+
+            <div class="card">
+                <div class="card-icon">🛒</div>
+                <h3>Point of Sale</h3>
+                <p>Process customer purchases.</p>
+                <button onclick="openPOS()">Open POS →</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📦</div>
+                <h3>Products</h3>
+                <p>Check available grocery items.</p>
+                <button onclick="viewProducts()">View Products →</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">💰</div>
+                <h3>My Sales</h3>
+                <p>Review your transactions.</p>
+                <button onclick="viewSales()">View Sales →</button>
+            </div>
+
+        </section>
+
+        <!-- DYNAMIC CONTENT -->
+        <section class="content-panel" id="content">
+            <h3>Quick Overview</h3>
+            <p>Select a feature from the sidebar to get started.</p>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+            KLYQ Grocery Management System © 2026 | Cashier Panel
+        </footer>
+
+    </main>
+</div>
+
+<script>
+
+/* ==========================
+   DATABASE
+========================== */
+
+let products = JSON.parse(localStorage.getItem("gps_products")) || [];
+let transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+let cart = [];
+
+/* ==========================
+   HELPER FUNCTIONS
+========================== */
+
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    })[character]);
+}
+
+function money(value) {
+    return Number(value || 0).toFixed(2);
+}
+
+function saveData() {
+    localStorage.setItem("gps_products", JSON.stringify(products));
+    localStorage.setItem("gps_tx", JSON.stringify(transactions));
+}
+
+function getTotal() {
+    return cart.reduce((sum, item) => {
+        return sum + item.price * item.quantity;
+    }, 0);
+}
+
+/* ==========================
+   CASHIER PROFILE
+========================== */
+
+document.getElementById("userName").textContent =
+    currentUser.name || currentUser.username;
+
+document.getElementById("welcomeName").textContent =
+    currentUser.name || currentUser.username;
+
+document.getElementById("profileIcon").textContent =
+    (currentUser.name || currentUser.username || "C").charAt(0).toUpperCase();
+
+/* ==========================
+   NAVIGATION
+========================== */
+
+function setActive(button) {
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    if (button) {
+        button.classList.add("active");
+    }
+}
+
+function showHome(button) {
+
+    setActive(button);
+
+    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+    transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+
+    const mySales = transactions.filter(sale =>
+        sale.cashier === currentUser.username
+    );
+
+    const totalSales = mySales.reduce((sum, sale) =>
+        sum + Number(sale.total || 0), 0
+    );
+
+    document.getElementById("content").innerHTML = `
+        <h3>Quick Overview</h3>
+        <p>Welcome back, ${escapeHTML(currentUser.name || currentUser.username)}!</p>
+
+        <div class="dashboard-cards">
+
+            <div class="card">
+                <div class="card-icon">📦</div>
+                <h3>Available Products</h3>
+                <h2>${products.length}</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">💰</div>
+                <h3>My Transactions</h3>
+                <h2>${mySales.length}</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">💵</div>
+                <h3>My Total Sales</h3>
+                <h2>₱${money(totalSales)}</h2>
+            </div>
+
+        </div>
+
+        <p>Select Point of Sale to start a customer transaction.</p>
+    `;
+}
+
+/* ==========================
+   LOGOUT
+========================== */
+
+function logout() {
+
+    if (!confirm("Are you sure you want to logout?")) {
+        return;
+    }
+
+    localStorage.removeItem("currentUser");
+    window.location.href = "login.html";
+}
+
+/* ==========================
+   PRODUCTS
+========================== */
+
+function viewProducts(button) {
+
+    if (button) setActive(button);
+
+    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+
+    let html = `
+        <h3>Available Products</h3>
+        <p>List of grocery products and available stocks.</p>
+
+        <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    if (products.length === 0) {
+        html += `<tr><td colspan="4">No products available.</td></tr>`;
+    } else {
+        products.forEach(product => {
+
+            let status = product.stock <= 0
+                ? "Out of Stock"
+                : product.stock <= 5
+                    ? "Low Stock"
+                    : "Available";
+
+            html += `
+                <tr>
+                    <td>${escapeHTML(product.name)}</td>
+                    <td>₱${money(product.price)}</td>
+                    <td>${Number(product.stock)}</td>
+                    <td>${status}</td>
+                </tr>
+            `;
+        });
+    }
+
+    html += `</tbody></table></div>`;
+
+    document.getElementById("content").innerHTML = html;
+}
+
+/* ==========================
+   POINT OF SALE
+========================== */
+
+function openPOS(button) {
+
+    if (button) setActive(button);
+
+    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+
+    document.getElementById("content").innerHTML = `
+
+        <h3>Point of Sale</h3>
+        <p>Process customer purchases and payments.</p>
+
+        <div class="card">
+
+            <h3>Select Product</h3>
+
+            <label>Product</label>
+
+            <select id="saleProduct">
+                <option value="">Select a product</option>
+                ${products.filter(p => Number(p.stock) > 0).map(p => `
+                    <option value="${Number(p.id)}">
+                        ${escapeHTML(p.name)} - ₱${money(p.price)}
+                        (${Number(p.stock)} available)
+                    </option>
+                `).join("")}
+            </select>
+
+            <label>Quantity</label>
+
+            <input type="number" id="saleQuantity"
+                min="1" step="1" value="1">
+
+            <button class="action" onclick="addToCart()">
+                Add to Cart
+            </button>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Shopping Cart</h3>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="cartList">
+                        <tr>
+                            <td colspan="5">Your cart is empty.</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+            <h3>Total: ₱<span id="cartTotal">0.00</span></h3>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Payment</h3>
+
+            <label>Cash Received (₱)</label>
+
+            <input type="number" id="cashReceived"
+                min="0" step="0.01"
+                placeholder="Enter cash amount">
+
+            <button class="action" onclick="checkout()">
+                Checkout
+            </button>
+
+            <h3>Change: ₱<span id="changeAmount">0.00</span></h3>
+
+        </div>
+
+    `;
+
+    cart = [];
+    renderCart();
+}
+
+/* ==========================
+   ADD TO CART
+========================== */
+
+function addToCart() {
+
+    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+
+    const id = Number(document.getElementById("saleProduct").value);
+    const quantity = Number(document.getElementById("saleQuantity").value);
+
+    const product = products.find(p => Number(p.id) === id);
+
+    if (!product) {
+        alert("Please select a product.");
+        return;
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+        alert("Please enter a valid quantity.");
+        return;
+    }
+
+    const existing = cart.find(item => item.id === id);
+    const currentQuantity = existing ? existing.quantity : 0;
+
+    if (currentQuantity + quantity > Number(product.stock)) {
+        alert("Not enough stock available!");
+        return;
+    }
+
+    if (existing) {
+        existing.quantity += quantity;
+    } else {
+        cart.push({
+            id: Number(product.id),
+            name: product.name,
+            price: Number(product.price),
+            quantity: quantity
+        });
+    }
+
+    renderCart();
+
+    document.getElementById("saleQuantity").value = 1;
+}
+
+/* ==========================
+   DISPLAY CART
+========================== */
+
+function renderCart() {
+
+    const list = document.getElementById("cartList");
+
+    if (!list) return;
+
+    if (cart.length === 0) {
+
+        list.innerHTML = `
+            <tr>
+                <td colspan="5">Your cart is empty.</td>
+            </tr>
+        `;
+
+    } else {
+
+        list.innerHTML = cart.map(item => `
+            <tr>
+                <td>${escapeHTML(item.name)}</td>
+                <td>₱${money(item.price)}</td>
+                <td>${item.quantity}</td>
+                <td>₱${money(item.price * item.quantity)}</td>
+                <td>
+                    <button class="delete-btn"
+                        onclick="removeFromCart(${Number(item.id)})">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    document.getElementById("cartTotal").textContent = money(getTotal());
+
+    calculateChange();
+}
+
+/* ==========================
+   REMOVE FROM CART
+========================== */
+
+function removeFromCart(id) {
+
+    cart = cart.filter(item => item.id !== id);
+
+    renderCart();
+}
+
+/* ==========================
+   CHANGE CALCULATION
+========================== */
+
+function calculateChange() {
+
+    const cashInput = document.getElementById("cashReceived");
+
+    if (!cashInput) return;
+
+    const cash = Number(cashInput.value);
+    const total = getTotal();
+
+    const change = cash >= total && cashInput.value.trim() !== ""
+        ? cash - total
+        : 0;
+
+    document.getElementById("changeAmount").textContent = money(change);
+}
+
+document.addEventListener("input", function(e) {
+    if (e.target.id === "cashReceived") {
+        calculateChange();
+    }
+});
+
+/* ==========================
+   CHECKOUT
+========================== */
+
+function checkout() {
+
+    if (cart.length === 0) {
+        alert("Your cart is empty!");
+        return;
+    }
+
+    products = JSON.parse(localStorage.getItem("gps_products")) || [];
+
+    const total = getTotal();
+
+    const cashInput = document.getElementById("cashReceived").value;
+    const cash = Number(cashInput);
+
+    if (cashInput.trim() === "" || !Number.isFinite(cash) || cash < total) {
+        alert("Insufficient cash! Please enter the correct amount.");
+        return;
+    }
+
+    // Validate stock again
+    for (const item of cart) {
+
+        const product = products.find(p => Number(p.id) === item.id);
+
+        if (!product || Number(product.stock) < item.quantity) {
+            alert("Insufficient stock for " + item.name);
+            return;
+        }
+    }
+
+    // Deduct stock
+    products.forEach(product => {
+
+        const item = cart.find(c => c.id === Number(product.id));
+
+        if (item) {
+            product.stock = Number(product.stock) - item.quantity;
+        }
+    });
+
+    const transaction = {
+        id: Date.now(),
+        cashier: currentUser.username,
+        date: new Date().toLocaleString(),
+        total: total,
+        cash: cash,
+        change: cash - total,
+        items: cart.map(item => ({...item}))
+    };
+
+    transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+
+    transactions.push(transaction);
+
+    saveData();
+
+    generateReceipt(transaction);
+
+    cart = [];
+
+    alert("Sale completed successfully!");
+
+    showReceipt();
+}
+
+/* ==========================
+   RECEIPT
+========================== */
+
+function generateReceipt(transaction) {
+
+    document.getElementById("content").innerHTML = `
+
+        <div id="receiptSection">
+
+            <div class="receipt" id="receipt">
+
+                <h2>KLYQ GROCERY</h2>
+                <p>SALES RECEIPT</p>
+
+                <hr>
+
+                <p>Receipt No: ${transaction.id}</p>
+                <p>Date: ${escapeHTML(transaction.date)}</p>
+                <p>Cashier: ${escapeHTML(currentUser.name || currentUser.username)}</p>
+
+                <hr>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        ${transaction.items.map(item => `
+                            <tr>
+                                <td>${escapeHTML(item.name)}</td>
+                                <td>${item.quantity}</td>
+                                <td>₱${money(item.price * item.quantity)}</td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <p><strong>Total: ₱${money(transaction.total)}</strong></p>
+                <p>Cash: ₱${money(transaction.cash)}</p>
+                <p>Change: ₱${money(transaction.change)}</p>
+
+                <hr>
+
+                <p>Thank you for shopping!</p>
+                <p>Please come again.</p>
+
+            </div>
+
+            <div class="no-print" style="text-align:center; margin-top:20px;">
+
+                <button class="action" onclick="window.print()">
+                    Print Receipt
+                </button>
+
+                <button class="action" onclick="openPOS()">
+                    New Transaction
+                </button>
+
+                <button class="action" onclick="viewSales()">
+                    View My Sales
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+}
+
+function showReceipt() {
+    window.scrollTo(0, 0);
+}
+
+/* ==========================
+   MY SALES
+========================== */
+
+function viewSales(button) {
+
+    if (button) setActive(button);
+
+    transactions = JSON.parse(localStorage.getItem("gps_tx")) || [];
+
+    const mySales = transactions.filter(sale =>
+        sale.cashier === currentUser.username
+    );
+
+    let html = `
+        <h3>My Sales Transactions</h3>
+        <p>Your recorded customer transactions.</p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Date</th>
+                        <th>Total Amount</th>
+                        <th>Cash</th>
+                        <th>Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    if (mySales.length === 0) {
+
+        html += `
+            <tr>
+                <td colspan="5">No sales recorded.</td>
+            </tr>
+        `;
+
+    } else {
+
+        mySales.slice().reverse().forEach(sale => {
+
+            html += `
+                <tr>
+                    <td>${escapeHTML(sale.id)}</td>
+                    <td>${escapeHTML(sale.date)}</td>
+                    <td>₱${money(sale.total)}</td>
+                    <td>₱${money(sale.cash)}</td>
+                    <td>₱${money(sale.change)}</td>
+                </tr>
+            `;
+
+        });
+    }
+
+    html += `</tbody></table></div>`;
+
+    document.getElementById("content").innerHTML = html;
+}
+
+/* ==========================
+   INITIALIZE
+========================== */
+
+showHome(document.querySelector(".nav-btn"));
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KLYQ - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth">
+    <h2>GROCERY POS SYSTEM</h2>
+    <h3>Login Account</h3>
+
+    <form id="login">
+
+        <label>Login As</label>
+        <select id="loginRole" required>
+            <option value="Cashier">Cashier</option>
+            <option value="Admin">Admin</option>
+        </select>
+
+        <label>Username or Email</label>
+        <input type="text" id="loginIdentity"
+               placeholder="Enter username or email" required>
+
+        <label>Password</label>
+        <input type="password" id="loginPassword"
+               placeholder="Enter password" required>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p>Don't have an account?
+        <button type="button" onclick="showRegister()">Register</button>
+    </p>
+</div>
+
+<script>
+function showRegister() {
+    window.location.href = "register.html";
+}
+
+document.getElementById("login").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let users = JSON.parse(localStorage.getItem("gps_users")) || [];
+
+    let identity = document.getElementById("loginIdentity").value.trim().toLowerCase();
+    let password = document.getElementById("loginPassword").value;
+    let role = document.getElementById("loginRole").value;
+
+    let user = users.find(u =>
+        (u.username.toLowerCase() === identity ||
+         u.email.toLowerCase() === identity) &&
+        u.password === password &&
+        u.role === role
+    );
+
+    if (!user) {
+        alert("Invalid account, password, or selected role!");
+        return;
+    }
+
+    localStorage.setItem("currentUser", JSON.stringify(user));
+
+    alert("Welcome, " + user.name + "!");
+
+    if (user.role === "Admin") {
+        window.location.href = "admin.html";
+    } else {
+        window.location.href = "user.html";
+    }
+});
+</script>
+
+</body>
+</html>
