@@ -1,77 +1,110 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>KLYQ - Login</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="auth">
-    <h2>GROCERY POS SYSTEM</h2>
-    <h3>Login Account</h3>
+    <div class="auth">
 
-    <form id="login">
+        <h2>KLYQ GROCERY POS</h2>
+        <h3>Login Account</h3>
 
-        <label>Login As</label>
-        <select id="loginRole" required>
-            <option value="Cashier">Cashier</option>
-            <option value="Admin">Admin</option>
-        </select>
+        <form id="loginForm">
 
-        <label>Username or Email</label>
-        <input type="text" id="loginIdentity"
-               placeholder="Enter username or email" required>
+            <label for="loginRole">Login As</label>
+            <select id="loginRole" required>
+                <option value="Cashier">Cashier</option>
+                <option value="Admin">Admin</option>
+            </select>
 
-        <label>Password</label>
-        <input type="password" id="loginPassword"
-               placeholder="Enter password" required>
+            <label for="loginIdentity">Username or Email</label>
+            <input
+                type="text"
+                id="loginIdentity"
+                placeholder="Enter username or email"
+                autocomplete="username"
+                required
+            >
 
-        <button type="submit">Login</button>
-    </form>
+            <label for="loginPass">Password</label>
+            <input
+                type="password"
+                id="loginPass"
+                placeholder="Enter password"
+                autocomplete="current-password"
+                required
+            >
 
-    <p>Don't have an account?
-        <button type="button" onclick="showRegister()">Register</button>
-    </p>
-</div>
+            <button type="submit">Login</button>
 
-<script>
-function showRegister() {
-    window.location.href = "register.html";
-}
+        </form>
 
-document.getElementById("login").addEventListener("submit", function(e) {
-    e.preventDefault();
+        <p>
+            Don't have an account?
+            <button type="button" onclick="showRegister()">
+                Register
+            </button>
+        </p>
 
-    let users = JSON.parse(localStorage.getItem("gps_users")) || [];
+    </div>
 
-    let identity = document.getElementById("loginIdentity").value.trim().toLowerCase();
-    let password = document.getElementById("loginPassword").value;
-    let role = document.getElementById("loginRole").value;
 
-    let user = users.find(u =>
-        (u.username.toLowerCase() === identity ||
-         u.email.toLowerCase() === identity) &&
-        u.password === password &&
-        u.role === role
-    );
+    <script src="script.js"></script>
 
-    if (!user) {
-        alert("Invalid account, password, or selected role!");
-        return;
-    }
+    <script>
 
-    localStorage.setItem("currentUser", JSON.stringify(user));
+        // GO TO REGISTER PAGE
+        function showRegister() {
+            window.location.href = "register.html";
+        }
 
-    alert("Welcome, " + user.name + "!");
+        // LOGIN
+        document.getElementById("loginForm").addEventListener("submit", function(e) {
 
-    if (user.role === "Admin") {
-        window.location.href = "admin.html";
-    } else {
-        window.location.href = "user.html";
-    }
-});
-</script>
+            e.preventDefault();
+
+            let users = JSON.parse(localStorage.getItem("gps_users")) || [];
+
+            let identity = document.getElementById("loginIdentity").value.trim().toLowerCase();
+            let password = document.getElementById("loginPass").value;
+            let role = document.getElementById("loginRole").value;
+
+            let user = users.find(u =>
+                (
+                    u.username.toLowerCase() === identity ||
+                    u.email.toLowerCase() === identity
+                ) &&
+                u.password === password &&
+                u.role === role
+            );
+
+            if (!user) {
+                alert("Invalid username/email, password, or account role!");
+                return;
+            }
+
+            localStorage.setItem("currentUser", JSON.stringify(user));
+
+            alert("Welcome, " + user.name + "!");
+
+            if (user.role === "Admin") {
+                window.location.href = "admin.html";
+            } else {
+                window.location.href = "user.html";
+            }
+
+        });
+
+    </script>
 
 </body>
 </html>

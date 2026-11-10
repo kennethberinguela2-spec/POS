@@ -1,0 +1,1714 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>KLYQ | Admin Dashboard</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        :root {
+            --primary: #174d36;
+            --secondary: #2c7650;
+            --light-green: #e9f3ec;
+            --background: #f4f7f5;
+            --text: #26352d;
+            --muted: #75847a;
+            --border: #e7eee9;
+            --white: #ffffff;
+            --danger: #b83d3d;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        button {
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            padding: 25px 18px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .brand {
+            text-align: center;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #47715b;
+        }
+
+        .brand h2 {
+            font-size: 25px;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+
+        .brand p {
+            color: #c5dfce;
+            font-size: 12px;
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 5px;
+            border-bottom: 1px solid #47715b;
+        }
+
+        .profile-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #d7eadc;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        .profile-info h4 {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            font-size: 11px;
+            color: #c5dfce;
+        }
+
+        .sidebar-label {
+            font-size: 10px;
+            color: #a9c8b4;
+            margin: 25px 10px 10px;
+            letter-spacing: 1.5px;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #e4f0e8;
+            font-size: 14px;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .nav-btn span {
+            font-size: 18px;
+            width: 23px;
+            text-align: center;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        .sidebar-bottom p {
+            color: #c5dfce;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* MAIN LAYOUT */
+
+        .main-container {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+
+        .topbar {
+            height: 80px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 35px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topbar h2 {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .menu-toggle {
+            display: none;
+            border: none;
+            background: var(--light-green);
+            color: var(--primary);
+            padding: 9px 12px;
+            border-radius: 7px;
+            font-size: 20px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .logout-btn {
+            padding: 11px 18px;
+            border: none;
+            border-radius: 7px;
+            background: var(--danger);
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #962e2e;
+        }
+
+        /* CONTENT */
+
+        main {
+            padding: 30px 35px;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            color: var(--primary);
+            font-size: 25px;
+            margin-bottom: 7px;
+        }
+
+        .page-header p {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        /* CARDS */
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 23px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.03);
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .stat-top p {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--light-green);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            font-size: 19px;
+        }
+
+        .stat-card h2 {
+            font-size: 27px;
+            color: var(--primary);
+        }
+
+        .stat-card small {
+            display: block;
+            margin-top: 7px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* CONTENT CARDS */
+
+        .content-card {
+            background: white;
+            padding: 25px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.03);
+        }
+
+        .content-card h3 {
+            color: var(--primary);
+            font-size: 16px;
+            margin-bottom: 18px;
+        }
+
+        .welcome-card {
+            background: linear-gradient(120deg, #174d36, #2c7650);
+            color: white;
+            padding: 28px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .welcome-card h2 {
+            font-size: 21px;
+            margin-bottom: 9px;
+        }
+
+        .welcome-card p {
+            color: #e1eee5;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        /* FORMS */
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 20px;
+        }
+
+        label {
+            display: block;
+            margin: 12px 0 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d5ded8;
+            border-radius: 7px;
+            background: white;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 2px rgba(44,118,80,0.1);
+        }
+
+        .action-btn {
+            padding: 12px 19px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 7px;
+            background: var(--primary);
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .action-btn:hover {
+            background: var(--secondary);
+        }
+
+        /* TABLES */
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 550px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        th {
+            background: var(--light-green);
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        td {
+            color: #46564c;
+        }
+
+        tbody tr:hover {
+            background: #f7faf8;
+        }
+
+        .empty-state {
+            padding: 30px;
+            text-align: center;
+            color: var(--muted);
+            background: #f7faf8;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        /* STATUS */
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .status.available {
+            background: #e1f4e7;
+            color: #287442;
+        }
+
+        .status.low {
+            background: #fff2d6;
+            color: #9b6b0d;
+        }
+
+        .status.out {
+            background: #fce6e6;
+            color: #b83d3d;
+        }
+
+        .role-admin {
+            color: #174d36;
+            background: #e1f4e7;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .role-cashier {
+            color: #496b9b;
+            background: #eaf0fa;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #fce6e6;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .delete-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* REPORT SUMMARY */
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .report-card {
+            background: white;
+            padding: 25px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .report-card p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .report-card h2 {
+            font-size: 26px;
+            color: var(--primary);
+        }
+
+        /* MOBILE OVERLAY */
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 700px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 260px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.35);
+                z-index: 90;
+            }
+
+            .main-container {
+                margin-left: 0;
+            }
+
+            .topbar {
+                height: 70px;
+                padding: 0 15px;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .topbar h2 {
+                font-size: 15px;
+            }
+
+            .admin-label {
+                display: none;
+            }
+
+            main {
+                padding: 23px 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-card h2 {
+                font-size: 22px;
+            }
+
+            .form-grid,
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 22px;
+            }
+
+            .content-card {
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .logout-btn {
+                padding: 9px 11px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+
+    <div class="brand">
+        <h2>KLYQ</h2>
+        <p>Grocery Management System</p>
+    </div>
+
+    <div class="admin-profile">
+        <div class="profile-icon" id="profileIcon">A</div>
+
+        <div class="profile-info">
+            <h4 id="adminName">Administrator</h4>
+            <p>Administrator Account</p>
+        </div>
+    </div>
+
+    <p class="sidebar-label">MAIN MENU</p>
+
+    <nav>
+        <button class="nav-btn active" data-page="dashboard">
+            <span>▦</span> Dashboard
+        </button>
+
+        <button class="nav-btn" data-page="products">
+            <span>▣</span> Products
+        </button>
+
+        <button class="nav-btn" data-page="inventory">
+            <span>▤</span> Inventory
+        </button>
+
+        <button class="nav-btn" data-page="transactions">
+            <span>▧</span> Transactions
+        </button>
+
+        <button class="nav-btn" data-page="reports">
+            <span>▥</span> Reports
+        </button>
+
+        <button class="nav-btn" data-page="users">
+            <span>♙</span> User Management
+        </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <p>KLYQ Grocery POS © 2026</p>
+    </div>
+
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- MAIN CONTAINER -->
+<div class="main-container">
+
+    <!-- HEADER -->
+    <header class="topbar">
+
+        <div class="topbar-left">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <h2>KLYQ ADMIN DASHBOARD</h2>
+        </div>
+
+        <div class="topbar-right">
+            <span class="admin-label" id="headerAdminName">
+                Administrator
+            </span>
+
+            <button class="logout-btn" id="logoutBtn">
+                Logout
+            </button>
+        </div>
+
+    </header>
+
+    <main>
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="page-section">
+
+            <div class="page-header">
+                <h1>Dashboard Overview</h1>
+                <p>Monitor your grocery store performance and activities.</p>
+            </div>
+
+            <div class="welcome-card">
+                <h2 id="welcomeMessage">Welcome, Admin!</h2>
+                <p>
+                    Manage your products, monitor inventory, review cashier
+                    transactions, and check your grocery store reports.
+                </p>
+            </div>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Total Products</p>
+                        <div class="stat-icon">▣</div>
+                    </div>
+                    <h2 id="totalProducts">0</h2>
+                    <small>Products in your store</small>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Total Sales</p>
+                        <div class="stat-icon">₱</div>
+                    </div>
+                    <h2 id="totalSales">₱0.00</h2>
+                    <small>Total recorded revenue</small>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Transactions</p>
+                        <div class="stat-icon">▧</div>
+                    </div>
+                    <h2 id="totalTransactions">0</h2>
+                    <small>Recorded sales transactions</small>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Registered Users</p>
+                        <div class="stat-icon">♙</div>
+                    </div>
+                    <h2 id="totalUsers">0</h2>
+                    <small>Admin and Cashier accounts</small>
+                </div>
+
+            </div>
+
+            <div class="content-card">
+                <h3>Recent Transactions</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Cashier</th>
+                                <th>Date</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="recentTransactions"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PRODUCTS -->
+        <section id="products" class="page-section hidden">
+
+            <div class="page-header">
+                <h1>Product Management</h1>
+                <p>Add, view, and manage your grocery products.</p>
+            </div>
+
+            <div class="content-card">
+
+                <h3>Add New Product</h3>
+
+                <form id="productForm">
+
+                    <div class="form-grid">
+
+                        <div>
+                            <label for="productName">Product Name</label>
+                            <input
+                                type="text"
+                                id="productName"
+                                placeholder="Enter product name"
+                                maxlength="100"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label for="productPrice">Product Price (₱)</label>
+                            <input
+                                type="number"
+                                id="productPrice"
+                                placeholder="Enter product price"
+                                min="0.01"
+                                step="0.01"
+                                required
+                            >
+                        </div>
+
+                        <div>
+                            <label for="productStock">Product Stock</label>
+                            <input
+                                type="number"
+                                id="productStock"
+                                placeholder="Enter stock quantity"
+                                min="0"
+                                step="1"
+                                required
+                            >
+                        </div>
+
+                    </div>
+
+                    <button type="submit" class="action-btn">
+                        + Add Product
+                    </button>
+
+                </form>
+
+            </div>
+
+            <div class="content-card">
+
+                <h3>Product List</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="productList"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- INVENTORY -->
+        <section id="inventory" class="page-section hidden">
+
+            <div class="page-header">
+                <h1>Inventory Management</h1>
+                <p>Monitor available products and stock levels.</p>
+            </div>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Total Products</p>
+                        <div class="stat-icon">▣</div>
+                    </div>
+                    <h2 id="inventoryProducts">0</h2>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Low Stock Items</p>
+                        <div class="stat-icon">!</div>
+                    </div>
+                    <h2 id="lowStockCount">0</h2>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Out of Stock</p>
+                        <div class="stat-icon">×</div>
+                    </div>
+                    <h2 id="outStockCount">0</h2>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Total Stock Units</p>
+                        <div class="stat-icon">▤</div>
+                    </div>
+                    <h2 id="totalStockUnits">0</h2>
+                </div>
+
+            </div>
+
+            <div class="content-card">
+
+                <h3>Available Inventory</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Available Stock</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="inventoryList"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- TRANSACTIONS -->
+        <section id="transactions" class="page-section hidden">
+
+            <div class="page-header">
+                <h1>Transaction History</h1>
+                <p>View all recorded grocery sales transactions.</p>
+            </div>
+
+            <div class="content-card">
+
+                <h3>All Cashier Sales Transactions</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Cashier</th>
+                                <th>Date</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="transactionList"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- REPORTS -->
+        <section id="reports" class="page-section hidden">
+
+            <div class="page-header">
+                <h1>Sales Reports</h1>
+                <p>Review the sales performance of your grocery store.</p>
+            </div>
+
+            <div class="report-grid">
+
+                <div class="report-card">
+                    <p>Total Revenue</p>
+                    <h2 id="reportRevenue">₱0.00</h2>
+                </div>
+
+                <div class="report-card">
+                    <p>Number of Sales</p>
+                    <h2 id="reportCount">0</h2>
+                </div>
+
+                <div class="report-card">
+                    <p>Average Transaction</p>
+                    <h2 id="averageSale">₱0.00</h2>
+                </div>
+
+                <div class="report-card">
+                    <p>Today's Revenue</p>
+                    <h2 id="todayRevenue">₱0.00</h2>
+                </div>
+
+            </div>
+
+            <div class="content-card" style="margin-top: 22px;">
+
+                <h3>Sales Summary</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Cashier</th>
+                                <th>Date</th>
+                                <th>Total Amount</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="reportTransactions"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- USER MANAGEMENT -->
+        <section id="users" class="page-section hidden">
+
+            <div class="page-header">
+                <h1>User Management</h1>
+                <p>View the registered accounts in your POS system.</p>
+            </div>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Total Users</p>
+                        <div class="stat-icon">♙</div>
+                    </div>
+                    <h2 id="userTotal">0</h2>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Admin Accounts</p>
+                        <div class="stat-icon">♔</div>
+                    </div>
+                    <h2 id="adminTotal">0</h2>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-top">
+                        <p>Cashier Accounts</p>
+                        <div class="stat-icon">♧</div>
+                    </div>
+                    <h2 id="cashierTotal">0</h2>
+                </div>
+
+            </div>
+
+            <div class="content-card">
+
+                <h3>Registered Users</h3>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="userList"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+/* =================================
+   ADMIN ACCESS CHECK
+================================= */
+
+function readStorage(key, fallback) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value ?? fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+const currentUser = readStorage("currentUser", null);
+
+if (!currentUser || currentUser.role !== "Admin") {
+
+    alert("Admin access only!");
+
+    window.location.replace("login.html");
+
+} else {
+
+    initializeAdmin();
+
+}
+
+
+/* =================================
+   INITIALIZE ADMIN
+================================= */
+
+function initializeAdmin() {
+
+    let products = [];
+    let transactions = [];
+    let users = [];
+
+    const money = value => {
+        const amount = Number(value);
+        return (Number.isFinite(amount) ? amount : 0)
+            .toLocaleString("en-PH", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+    };
+
+    const escapeHTML = value => {
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[character]);
+    };
+
+    function loadData() {
+
+        const savedProducts = readStorage("gps_products", []);
+        const savedTransactions = readStorage("gps_tx", []);
+        const savedUsers = readStorage("gps_users", []);
+
+        products = Array.isArray(savedProducts) ? savedProducts : [];
+        transactions = Array.isArray(savedTransactions) ? savedTransactions : [];
+        users = Array.isArray(savedUsers) ? savedUsers : [];
+
+    }
+
+    function refreshData() {
+
+        loadData();
+
+        updateDashboard();
+        renderProducts();
+        renderInventory();
+        renderTransactions();
+        renderUsers();
+        updateReports();
+
+    }
+
+    /* =================================
+       ADMIN PROFILE
+    ================================= */
+
+    const adminName = currentUser.name || currentUser.username || "Administrator";
+
+    document.getElementById("adminName").textContent = adminName;
+    document.getElementById("headerAdminName").textContent = adminName;
+    document.getElementById("welcomeMessage").textContent =
+        "Welcome, " + adminName + "!";
+
+    document.getElementById("profileIcon").textContent =
+        adminName.charAt(0).toUpperCase();
+
+
+    /* =================================
+       NAVIGATION
+    ================================= */
+
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function showPage(page) {
+
+        document.querySelectorAll(".page-section").forEach(section => {
+            section.classList.add("hidden");
+        });
+
+        const selectedPage = document.getElementById(page);
+
+        if (!selectedPage) return;
+
+        selectedPage.classList.remove("hidden");
+
+        document.querySelectorAll(".nav-btn").forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.page === page
+            );
+        });
+
+        refreshData();
+
+        sidebar.classList.remove("open");
+        overlay.classList.remove("show");
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+
+        button.addEventListener("click", function() {
+            showPage(this.dataset.page);
+        });
+
+    });
+
+    document.getElementById("menuToggle").addEventListener("click", function() {
+
+        sidebar.classList.toggle("open");
+        overlay.classList.toggle("show");
+
+    });
+
+    overlay.addEventListener("click", function() {
+
+        sidebar.classList.remove("open");
+        overlay.classList.remove("show");
+
+    });
+
+
+    /* =================================
+       DASHBOARD
+    ================================= */
+
+    function updateDashboard() {
+
+        const totalRevenue = transactions.reduce((sum, tx) => {
+            const amount = Number(tx.total);
+            return sum + (Number.isFinite(amount) ? amount : 0);
+        }, 0);
+
+        document.getElementById("totalProducts").textContent =
+            products.length;
+
+        document.getElementById("totalSales").textContent =
+            "₱" + money(totalRevenue);
+
+        document.getElementById("totalTransactions").textContent =
+            transactions.length;
+
+        document.getElementById("totalUsers").textContent =
+            users.length;
+
+        const recent = transactions.slice().reverse().slice(0, 5);
+
+        const list = document.getElementById("recentTransactions");
+
+        if (recent.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            No transactions recorded yet.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        list.innerHTML = recent.map(tx => `
+            <tr>
+                <td>${escapeHTML(tx.id || "N/A")}</td>
+                <td>${escapeHTML(tx.cashier || "Unknown")}</td>
+                <td>${escapeHTML(tx.date || "N/A")}</td>
+                <td>₱${money(tx.total)}</td>
+            </tr>
+        `).join("");
+
+    }
+
+
+    /* =================================
+       ADD PRODUCT
+    ================================= */
+
+    document.getElementById("productForm").addEventListener("submit", function(e) {
+
+        e.preventDefault();
+
+        loadData();
+
+        const name = document.getElementById("productName").value.trim();
+        const price = Number(document.getElementById("productPrice").value);
+        const stock = Number(document.getElementById("productStock").value);
+
+        if (!name || !Number.isFinite(price) || price <= 0 ||
+            !Number.isInteger(stock) || stock < 0) {
+
+            alert("Please enter valid product information.");
+            return;
+
+        }
+
+        const newProduct = {
+            id: Date.now(),
+            name: name,
+            price: price,
+            stock: stock
+        };
+
+        products.push(newProduct);
+
+        localStorage.setItem("gps_products", JSON.stringify(products));
+
+        this.reset();
+
+        refreshData();
+
+        alert("Product added successfully!");
+
+    });
+
+
+    /* =================================
+       DISPLAY PRODUCTS
+    ================================= */
+
+    function renderProducts() {
+
+        const list = document.getElementById("productList");
+
+        if (products.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            No products available.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        list.innerHTML = products.map(product => {
+
+            const id = escapeHTML(product.id);
+
+            return `
+                <tr>
+                    <td>${escapeHTML(product.name)}</td>
+                    <td>₱${money(product.price)}</td>
+                    <td>${Number(product.stock) || 0}</td>
+                    <td>
+                        <button
+                            class="delete-btn"
+                            data-delete-id="${id}">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+        }).join("");
+
+    }
+
+
+    /* =================================
+       DELETE PRODUCT
+    ================================= */
+
+    document.getElementById("productList").addEventListener("click", function(e) {
+
+        const button = e.target.closest("[data-delete-id]");
+
+        if (!button) return;
+
+        const id = button.dataset.deleteId;
+
+        if (!confirm("Are you sure you want to delete this product?")) {
+            return;
+        }
+
+        loadData();
+
+        products = products.filter(product =>
+            String(product.id) !== String(id)
+        );
+
+        localStorage.setItem("gps_products", JSON.stringify(products));
+
+        refreshData();
+
+        alert("Product deleted successfully!");
+
+    });
+
+
+    /* =================================
+       INVENTORY
+    ================================= */
+
+    function renderInventory() {
+
+        const list = document.getElementById("inventoryList");
+
+        const lowStock = products.filter(p =>
+            Number(p.stock) > 0 && Number(p.stock) <= 5
+        ).length;
+
+        const outOfStock = products.filter(p =>
+            Number(p.stock) <= 0
+        ).length;
+
+        const totalUnits = products.reduce((sum, p) => {
+            const stock = Number(p.stock);
+            return sum + (Number.isFinite(stock) ? stock : 0);
+        }, 0);
+
+        document.getElementById("inventoryProducts").textContent =
+            products.length;
+
+        document.getElementById("lowStockCount").textContent =
+            lowStock;
+
+        document.getElementById("outStockCount").textContent =
+            outOfStock;
+
+        document.getElementById("totalStockUnits").textContent =
+            totalUnits;
+
+        if (products.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            No inventory available.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        list.innerHTML = products.map(product => {
+
+            const stock = Number(product.stock) || 0;
+
+            let status = "Available";
+            let statusClass = "available";
+
+            if (stock <= 0) {
+
+                status = "Out of Stock";
+                statusClass = "out";
+
+            } else if (stock <= 5) {
+
+                status = "Low Stock";
+                statusClass = "low";
+
+            }
+
+            return `
+                <tr>
+                    <td>${escapeHTML(product.name)}</td>
+                    <td>₱${money(product.price)}</td>
+                    <td>${stock}</td>
+                    <td>
+                        <span class="status ${statusClass}">
+                            ${status}
+                        </span>
+                    </td>
+                </tr>
+            `;
+
+        }).join("");
+
+    }
+
+
+    /* =================================
+       TRANSACTIONS
+    ================================= */
+
+    function renderTransactions() {
+
+        const list = document.getElementById("transactionList");
+
+        if (transactions.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            No transactions recorded yet.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        list.innerHTML = transactions.slice().reverse().map(tx => `
+            <tr>
+                <td>${escapeHTML(tx.id || "N/A")}</td>
+                <td>${escapeHTML(tx.cashier || "Unknown")}</td>
+                <td>${escapeHTML(tx.date || "N/A")}</td>
+                <td>₱${money(tx.total)}</td>
+            </tr>
+        `).join("");
+
+    }
+
+
+    /* =================================
+       SALES REPORTS
+    ================================= */
+
+    function updateReports() {
+
+        const totalRevenue = transactions.reduce((sum, tx) => {
+            const amount = Number(tx.total);
+            return sum + (Number.isFinite(amount) ? amount : 0);
+        }, 0);
+
+        const average = transactions.length > 0
+            ? totalRevenue / transactions.length
+            : 0;
+
+        const today = new Date().toLocaleDateString("en-CA");
+
+        const todayTotal = transactions.reduce((sum, tx) => {
+
+            const rawDate = tx.date || "";
+
+            const parsedDate = new Date(rawDate);
+
+            const transactionDay = Number.isNaN(parsedDate.getTime())
+                ? String(rawDate).slice(0, 10)
+                : parsedDate.toLocaleDateString("en-CA");
+
+            if (transactionDay === today) {
+                return sum + (Number(tx.total) || 0);
+            }
+
+            return sum;
+
+        }, 0);
+
+        document.getElementById("reportRevenue").textContent =
+            "₱" + money(totalRevenue);
+
+        document.getElementById("reportCount").textContent =
+            transactions.length;
+
+        document.getElementById("averageSale").textContent =
+            "₱" + money(average);
+
+        document.getElementById("todayRevenue").textContent =
+            "₱" + money(todayTotal);
+
+        const list = document.getElementById("reportTransactions");
+
+        if (transactions.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            No sales data available.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        list.innerHTML = transactions.slice().reverse().map(tx => `
+            <tr>
+                <td>${escapeHTML(tx.id || "N/A")}</td>
+                <td>${escapeHTML(tx.cashier || "Unknown")}</td>
+                <td>${escapeHTML(tx.date || "N/A")}</td>
+                <td>₱${money(tx.total)}</td>
+            </tr>
+        `).join("");
+
+    }
+
+
+    /* =================================
+       USER MANAGEMENT
+    ================================= */
+
+    function renderUsers() {
+
+        const list = document.getElementById("userList");
+
+        const admins = users.filter(user => user.role === "Admin").length;
+        const cashiers = users.filter(user => user.role === "Cashier").length;
+
+        document.getElementById("userTotal").textContent =
+            users.length;
+
+        document.getElementById("adminTotal").textContent =
+            admins;
+
+        document.getElementById("cashierTotal").textContent =
+            cashiers;
+
+        if (users.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            No registered users.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+        list.innerHTML = users.map(user => {
+
+            const role = user.role || "Unknown";
+
+            const roleClass = role === "Admin"
+                ? "role-admin"
+                : "role-cashier";
+
+            return `
+                <tr>
+                    <td>${escapeHTML(user.name || user.fullName || "")}</td>
+                    <td>${escapeHTML(user.username || "")}</td>
+                    <td>${escapeHTML(user.email || "")}</td>
+                    <td>
+                        <span class="${roleClass}">
+                            ${escapeHTML(role)}
+                        </span>
+                    </td>
+                </tr>
+            `;
+
+        }).join("");
+
+    }
+
+
+    /* =================================
+       LOGOUT
+    ================================= */
+
+    document.getElementById("logoutBtn").addEventListener("click", function() {
+
+        if (!confirm("Are you sure you want to logout?")) {
+            return;
+        }
+
+        localStorage.removeItem("currentUser");
+
+        window.location.replace("login.html");
+
+    });
+
+
+    /* =================================
+       AUTOMATIC DATA REFRESH
+    ================================= */
+
+    window.addEventListener("storage", function(e) {
+
+        if (
+            e.key === "gps_products" ||
+            e.key === "gps_tx" ||
+            e.key === "gps_users"
+        ) {
+
+            refreshData();
+
+        }
+
+    });
+
+
+    /* =================================
+       START DASHBOARD
+    ================================= */
+
+    loadData();
+    refreshData();
+
+}
+</script>
+
+</body>
+</html>

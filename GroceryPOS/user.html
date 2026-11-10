@@ -1,0 +1,1240 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>KLYQ | Cashier Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* RECEIPT PRINT DESIGN */
+
+        .receipt {
+            background: white;
+            color: black;
+            width: 100%;
+            max-width: 380px;
+            margin: 20px auto;
+            padding: 25px;
+            border: 1px solid #ddd;
+            font-family: Arial, sans-serif;
+        }
+
+        .receipt h2,
+        .receipt p {
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .receipt table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .receipt th,
+        .receipt td {
+            padding: 8px 4px;
+            text-align: left;
+            border-bottom: 1px dashed #ccc;
+            font-size: 12px;
+        }
+
+        .receipt hr {
+            border: none;
+            border-top: 1px dashed #777;
+            margin: 12px 0;
+        }
+
+        .receipt .receipt-total {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .receipt-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .receipt-actions button {
+            padding: 11px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #174d36;
+            color: white;
+            cursor: pointer;
+        }
+
+        .receipt-actions button:hover {
+            background: #2c7650;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .empty-message {
+            padding: 20px;
+            text-align: center;
+            color: #75847a;
+        }
+
+        .stock-status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 11px;
+        }
+
+        .stock-available {
+            background: #e1f4e7;
+            color: #287442;
+        }
+
+        .stock-low {
+            background: #fff2d6;
+            color: #9b6b0d;
+        }
+
+        .stock-out {
+            background: #fce6e6;
+            color: #b83d3d;
+        }
+
+        .cart-total {
+            margin-top: 20px;
+            text-align: right;
+            color: #174d36;
+        }
+
+        .pos-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .pos-buttons button {
+            padding: 11px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #174d36;
+            color: white;
+        }
+
+        .pos-buttons button:hover {
+            background: #2c7650;
+        }
+
+        .remove-item {
+            background: #b83d3d !important;
+            color: white;
+            border: none;
+            padding: 7px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        @media print {
+            @page {
+                size: 80mm auto;
+                margin: 5mm;
+            }
+
+            body.printing * {
+                visibility: hidden !important;
+            }
+
+            body.printing #receipt,
+            body.printing #receipt * {
+                visibility: visible !important;
+            }
+
+            body.printing #receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                padding: 5px;
+                border: none;
+            }
+
+            body.printing .receipt-actions {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- CASHIER DASHBOARD -->
+<div class="pos-dashboard">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <h2>KLYQ</h2>
+            <p>Grocery Management System</p>
+        </div>
+
+        <nav>
+            <button class="nav-btn active" onclick="showHome(this)">
+                Dashboard
+            </button>
+
+            <button class="nav-btn" onclick="openPOS(this)">
+                Point of Sale
+            </button>
+
+            <button class="nav-btn" onclick="viewProducts(this)">
+                Products
+            </button>
+
+            <button class="nav-btn" onclick="viewSales(this)">
+                My Sales
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button class="logout-btn" onclick="logout()">
+                Logout
+            </button>
+        </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- HEADER -->
+        <header class="topbar">
+
+            <div>
+                <h2>Cashier Dashboard</h2>
+                <p>Welcome to your workspace.</p>
+            </div>
+
+            <div class="profile">
+
+                <div class="profile-icon" id="profileIcon">C</div>
+
+                <div>
+                    <strong id="userName">Cashier</strong>
+                    <small>Cashier Account</small>
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- WELCOME -->
+        <section class="welcome-banner">
+
+            <div>
+                <h2>Hello, <span id="welcomeName">Cashier</span>!</h2>
+                <p>Ready to serve customers today?</p>
+            </div>
+
+            <div class="welcome-icon">🛒</div>
+
+        </section>
+
+        <!-- DASHBOARD CARDS -->
+        <section class="dashboard-cards">
+
+            <div class="card">
+                <div class="card-icon">🛒</div>
+                <h3>Point of Sale</h3>
+                <p>Process customer purchases.</p>
+                <button onclick="openPOS()">Open POS →</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📦</div>
+                <h3>Products</h3>
+                <p>Check available grocery items.</p>
+                <button onclick="viewProducts()">View Products →</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">💰</div>
+                <h3>My Sales</h3>
+                <p>Review your transactions.</p>
+                <button onclick="viewSales()">View Sales →</button>
+            </div>
+
+        </section>
+
+        <!-- DYNAMIC CONTENT -->
+        <section class="content-panel" id="content">
+
+            <h3>Quick Overview</h3>
+            <p>Select a feature from the sidebar to get started.</p>
+
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+            KLYQ Grocery Management System © 2026 | Cashier Panel
+        </footer>
+
+    </main>
+
+</div>
+
+
+<script>
+
+/* =====================================
+   AUTHENTICATION
+===================================== */
+
+function readStorage(key, fallback) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return value ?? fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+const currentUser = readStorage("currentUser", null);
+
+if (!currentUser || currentUser.role !== "Cashier") {
+
+    alert("Please login using a cashier account.");
+    window.location.replace("login.html");
+
+} else {
+
+    initializeCashier();
+
+}
+
+
+/* =====================================
+   INITIALIZE CASHIER
+===================================== */
+
+function initializeCashier() {
+
+    let products = [];
+    let transactions = [];
+    let cart = [];
+
+    const content = document.getElementById("content");
+
+    /* =====================================
+       HELPER FUNCTIONS
+    ===================================== */
+
+    function loadData() {
+
+        const savedProducts = readStorage("gps_products", []);
+        const savedTransactions = readStorage("gps_tx", []);
+
+        products = Array.isArray(savedProducts)
+            ? savedProducts
+            : [];
+
+        transactions = Array.isArray(savedTransactions)
+            ? savedTransactions
+            : [];
+
+    }
+
+    function money(value) {
+
+        const amount = Number(value);
+
+        return (Number.isFinite(amount) ? amount : 0)
+            .toLocaleString("en-PH", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+    }
+
+    function escapeHTML(value) {
+
+        return String(value ?? "").replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
+        })[character]);
+
+    }
+
+    function getTotal() {
+
+        return cart.reduce((sum, item) => {
+            return sum + item.price * item.quantity;
+        }, 0);
+
+    }
+
+    function saveData() {
+
+        localStorage.setItem(
+            "gps_products",
+            JSON.stringify(products)
+        );
+
+        localStorage.setItem(
+            "gps_tx",
+            JSON.stringify(transactions)
+        );
+
+    }
+
+    function getCashierName() {
+        return currentUser.name || currentUser.username || "Cashier";
+    }
+
+
+    /* =====================================
+       CASHIER PROFILE
+    ===================================== */
+
+    document.getElementById("userName").textContent =
+        getCashierName();
+
+    document.getElementById("welcomeName").textContent =
+        getCashierName();
+
+    document.getElementById("profileIcon").textContent =
+        getCashierName().charAt(0).toUpperCase();
+
+
+    /* =====================================
+       NAVIGATION
+    ===================================== */
+
+    function setActive(button) {
+
+        document.querySelectorAll(".nav-btn").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        if (button) {
+            button.classList.add("active");
+        }
+
+    }
+
+    function showHome(button = null) {
+
+        setActive(button || document.querySelector(".nav-btn"));
+
+        loadData();
+
+        const mySales = transactions.filter(sale =>
+            sale.cashier === currentUser.username
+        );
+
+        const totalSales = mySales.reduce((sum, sale) => {
+            return sum + (Number(sale.total) || 0);
+        }, 0);
+
+        content.innerHTML = `
+
+            <h3>Quick Overview</h3>
+
+            <p>
+                Welcome back, ${escapeHTML(getCashierName())}!
+            </p>
+
+            <div class="dashboard-cards">
+
+                <div class="card">
+                    <div class="card-icon">📦</div>
+                    <h3>Available Products</h3>
+                    <h2>${products.length}</h2>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">💰</div>
+                    <h3>My Transactions</h3>
+                    <h2>${mySales.length}</h2>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">💵</div>
+                    <h3>My Total Sales</h3>
+                    <h2>₱${money(totalSales)}</h2>
+                </div>
+
+            </div>
+
+            <p>
+                Select Point of Sale to start a customer transaction.
+            </p>
+
+        `;
+
+    }
+
+
+    /* =====================================
+       LOGOUT
+    ===================================== */
+
+    window.logout = function() {
+
+        if (!confirm("Are you sure you want to logout?")) {
+            return;
+        }
+
+        localStorage.removeItem("currentUser");
+
+        window.location.replace("login.html");
+
+    };
+
+
+    /* =====================================
+       PRODUCTS
+    ===================================== */
+
+    window.viewProducts = function(button = null) {
+
+        if (button) setActive(button);
+
+        loadData();
+
+        let html = `
+
+            <h3>Available Products</h3>
+
+            <p>List of grocery products and available stocks.</p>
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+        `;
+
+        if (products.length === 0) {
+
+            html += `
+                <tr>
+                    <td colspan="4">
+                        <div class="empty-message">
+                            No products available.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            products.forEach(product => {
+
+                const stock = Number(product.stock) || 0;
+
+                let status = "Available";
+                let statusClass = "stock-available";
+
+                if (stock <= 0) {
+
+                    status = "Out of Stock";
+                    statusClass = "stock-out";
+
+                } else if (stock <= 5) {
+
+                    status = "Low Stock";
+                    statusClass = "stock-low";
+
+                }
+
+                html += `
+                    <tr>
+                        <td>${escapeHTML(product.name)}</td>
+                        <td>₱${money(product.price)}</td>
+                        <td>${stock}</td>
+                        <td>
+                            <span class="stock-status ${statusClass}">
+                                ${status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+
+            });
+
+        }
+
+        html += `
+                    </tbody>
+                </table>
+
+            </div>
+        `;
+
+        content.innerHTML = html;
+
+    };
+
+
+    /* =====================================
+       POINT OF SALE
+    ===================================== */
+
+    window.openPOS = function(button = null) {
+
+        if (button) setActive(button);
+
+        loadData();
+
+        cart = [];
+
+        content.innerHTML = `
+
+            <h3>Point of Sale</h3>
+
+            <p>Process customer purchases and payments.</p>
+
+            <div class="card">
+
+                <h3>Select Product</h3>
+
+                <label for="saleProduct">Product</label>
+
+                <select id="saleProduct">
+
+                    <option value="">Select a product</option>
+
+                    ${products
+                        .filter(p => Number(p.stock) > 0)
+                        .map(p => `
+                            <option value="${escapeHTML(p.id)}">
+                                ${escapeHTML(p.name)}
+                                - ₱${money(p.price)}
+                                (${Number(p.stock)} available)
+                            </option>
+                        `).join("")}
+
+                </select>
+
+                <label for="saleQuantity">Quantity</label>
+
+                <input
+                    type="number"
+                    id="saleQuantity"
+                    min="1"
+                    step="1"
+                    value="1"
+                >
+
+                <div class="pos-buttons">
+                    <button onclick="addToCart()">
+                        Add to Cart
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Shopping Cart</h3>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Subtotal</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="cartList"></tbody>
+
+                    </table>
+
+                </div>
+
+                <h3 class="cart-total">
+                    Total: ₱<span id="cartTotal">0.00</span>
+                </h3>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Payment</h3>
+
+                <label for="cashReceived">Cash Received (₱)</label>
+
+                <input
+                    type="number"
+                    id="cashReceived"
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter cash amount"
+                >
+
+                <div class="pos-buttons">
+                    <button onclick="checkout()">
+                        Checkout
+                    </button>
+                </div>
+
+                <h3 style="margin-top:20px;">
+                    Change: ₱<span id="changeAmount">0.00</span>
+                </h3>
+
+            </div>
+
+        `;
+
+        renderCart();
+
+    };
+
+
+    /* =====================================
+       ADD TO CART
+    ===================================== */
+
+    window.addToCart = function() {
+
+        loadData();
+
+        const selectedId = document.getElementById("saleProduct").value;
+        const quantity = Number(
+            document.getElementById("saleQuantity").value
+        );
+
+        if (selectedId === "") {
+            alert("Please select a product.");
+            return;
+        }
+
+        if (!Number.isInteger(quantity) || quantity < 1) {
+            alert("Please enter a valid quantity.");
+            return;
+        }
+
+        const product = products.find(p =>
+            String(p.id) === String(selectedId)
+        );
+
+        if (!product) {
+            alert("Product not found. Please refresh the POS.");
+            openPOS();
+            return;
+        }
+
+        const existing = cart.find(item =>
+            String(item.id) === String(product.id)
+        );
+
+        const currentQuantity = existing
+            ? existing.quantity
+            : 0;
+
+        if (currentQuantity + quantity > Number(product.stock)) {
+            alert("Not enough stock available!");
+            return;
+        }
+
+        if (existing) {
+
+            existing.quantity += quantity;
+
+        } else {
+
+            cart.push({
+                id: product.id,
+                name: product.name,
+                price: Number(product.price),
+                quantity: quantity
+            });
+
+        }
+
+        renderCart();
+
+        document.getElementById("saleQuantity").value = 1;
+
+    };
+
+
+    /* =====================================
+       DISPLAY CART
+    ===================================== */
+
+    function renderCart() {
+
+        const list = document.getElementById("cartList");
+
+        if (!list) return;
+
+        if (cart.length === 0) {
+
+            list.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-message">
+                            Your cart is empty.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            list.innerHTML = cart.map(item => `
+
+                <tr>
+                    <td>${escapeHTML(item.name)}</td>
+                    <td>₱${money(item.price)}</td>
+                    <td>${item.quantity}</td>
+                    <td>₱${money(item.price * item.quantity)}</td>
+                    <td>
+                        <button
+                            class="remove-item"
+                            onclick="removeFromCart('${escapeHTML(item.id)}')">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+
+            `).join("");
+
+        }
+
+        document.getElementById("cartTotal").textContent =
+            money(getTotal());
+
+        calculateChange();
+
+    }
+
+
+    /* =====================================
+       REMOVE FROM CART
+    ===================================== */
+
+    window.removeFromCart = function(id) {
+
+        cart = cart.filter(item =>
+            String(item.id) !== String(id)
+        );
+
+        renderCart();
+
+    };
+
+
+    /* =====================================
+       CHANGE CALCULATION
+    ===================================== */
+
+    window.calculateChange = function() {
+
+        const cashInput = document.getElementById("cashReceived");
+
+        if (!cashInput) return;
+
+        const cash = Number(cashInput.value);
+        const total = getTotal();
+
+        const change = cashInput.value.trim() !== "" &&
+            Number.isFinite(cash) &&
+            cash >= total
+                ? cash - total
+                : 0;
+
+        document.getElementById("changeAmount").textContent =
+            money(change);
+
+    };
+
+    document.addEventListener("input", function(e) {
+
+        if (e.target.id === "cashReceived") {
+            calculateChange();
+        }
+
+    });
+
+
+    /* =====================================
+       CHECKOUT
+    ===================================== */
+
+    window.checkout = function() {
+
+        if (cart.length === 0) {
+            alert("Your cart is empty!");
+            return;
+        }
+
+        // Load the latest shared browser data.
+        loadData();
+
+        const total = getTotal();
+
+        const cashInput = document.getElementById("cashReceived");
+        const cash = Number(cashInput.value);
+
+        if (
+            cashInput.value.trim() === "" ||
+            !Number.isFinite(cash) ||
+            cash < total
+        ) {
+
+            alert("Insufficient cash! Please enter the correct amount.");
+            return;
+
+        }
+
+        // Validate all products and stock again.
+        for (const item of cart) {
+
+            const product = products.find(p =>
+                String(p.id) === String(item.id)
+            );
+
+            if (!product) {
+                alert("Product " + item.name + " is no longer available.");
+                return;
+            }
+
+            if (Number(product.stock) < item.quantity) {
+                alert("Insufficient stock for " + item.name + "!");
+                return;
+            }
+
+        }
+
+        // Deduct stock.
+        products.forEach(product => {
+
+            const item = cart.find(c =>
+                String(c.id) === String(product.id)
+            );
+
+            if (item) {
+                product.stock = Number(product.stock) - item.quantity;
+            }
+
+        });
+
+        // Create transaction.
+        const transaction = {
+
+            id: "TXN-" + Date.now(),
+
+            cashier: currentUser.username,
+
+            cashierName: getCashierName(),
+
+            date: new Date().toLocaleString(),
+
+            total: total,
+
+            cash: cash,
+
+            change: cash - total,
+
+            items: cart.map(item => ({
+                ...item
+            }))
+
+        };
+
+        // Save transaction and product stock.
+        transactions.push(transaction);
+
+        saveData();
+
+        // Clear cart and display receipt.
+        cart = [];
+
+        generateReceipt(transaction);
+
+        alert("Sale completed successfully!");
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+    };
+
+
+    /* =====================================
+       GENERATE RECEIPT
+    ===================================== */
+
+    function generateReceipt(transaction) {
+
+        content.innerHTML = `
+
+            <h3>Transaction Completed</h3>
+
+            <p>Your transaction has been saved successfully.</p>
+
+            <div id="receipt" class="receipt">
+
+                <h2>KLYQ GROCERY</h2>
+
+                <p>SALES RECEIPT</p>
+
+                <hr>
+
+                <p>
+                    Receipt No: ${escapeHTML(transaction.id)}
+                </p>
+
+                <p>
+                    Date: ${escapeHTML(transaction.date)}
+                </p>
+
+                <p>
+                    Cashier: ${escapeHTML(transaction.cashierName)}
+                </p>
+
+                <hr>
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        ${transaction.items.map(item => `
+
+                            <tr>
+                                <td>${escapeHTML(item.name)}</td>
+                                <td>${item.quantity}</td>
+                                <td>₱${money(item.price * item.quantity)}</td>
+                            </tr>
+
+                        `).join("")}
+
+                    </tbody>
+
+                </table>
+
+                <hr>
+
+                <p class="receipt-total">
+                    Total: ₱${money(transaction.total)}
+                </p>
+
+                <p class="receipt-total">
+                    Cash: ₱${money(transaction.cash)}
+                </p>
+
+                <p class="receipt-total">
+                    Change: ₱${money(transaction.change)}
+                </p>
+
+                <hr>
+
+                <p>Thank you for shopping!</p>
+                <p>Please come again.</p>
+
+            </div>
+
+            <div class="receipt-actions">
+
+                <button onclick="printReceipt()">
+                    Print Receipt
+                </button>
+
+                <button onclick="openPOS()">
+                    New Transaction
+                </button>
+
+                <button onclick="viewSales()">
+                    View My Sales
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /* =====================================
+       PRINT RECEIPT
+    ===================================== */
+
+    window.printReceipt = function() {
+
+        document.body.classList.add("printing");
+
+        window.print();
+
+        document.body.classList.remove("printing");
+
+    };
+
+
+    /* =====================================
+       MY SALES
+    ===================================== */
+
+    window.viewSales = function(button = null) {
+
+        if (button) setActive(button);
+
+        loadData();
+
+        const mySales = transactions.filter(sale =>
+            sale.cashier === currentUser.username
+        );
+
+        const totalSales = mySales.reduce((sum, sale) => {
+            return sum + (Number(sale.total) || 0);
+        }, 0);
+
+        let html = `
+
+            <h3>My Sales Transactions</h3>
+
+            <p>Your recorded customer transactions.</p>
+
+            <div class="card">
+
+                <h3>Total Sales: ₱${money(totalSales)}</h3>
+
+                <p>Number of Transactions: ${mySales.length}</p>
+
+            </div>
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Date</th>
+                            <th>Total Amount</th>
+                            <th>Cash</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+        `;
+
+        if (mySales.length === 0) {
+
+            html += `
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-message">
+                            No sales recorded yet.
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            mySales.slice().reverse().forEach(sale => {
+
+                html += `
+
+                    <tr>
+                        <td>${escapeHTML(sale.id)}</td>
+                        <td>${escapeHTML(sale.date)}</td>
+                        <td>₱${money(sale.total)}</td>
+                        <td>₱${money(sale.cash)}</td>
+                        <td>₱${money(sale.change)}</td>
+                    </tr>
+
+                `;
+
+            });
+
+        }
+
+        html += `
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        `;
+
+        content.innerHTML = html;
+
+    };
+
+
+    /* =====================================
+       REFRESH WHEN DATA CHANGES
+    ===================================== */
+
+    window.addEventListener("storage", function(e) {
+
+        if (
+            e.key === "gps_products" ||
+            e.key === "gps_tx"
+        ) {
+
+            loadData();
+
+        }
+
+    });
+
+
+    /* =====================================
+       INITIALIZE DASHBOARD
+    ===================================== */
+
+    loadData();
+
+    showHome();
+
+}
+
+</script>
+
+</body>
+</html>
